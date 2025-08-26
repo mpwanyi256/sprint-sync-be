@@ -1,9 +1,22 @@
 import { port } from './config';
-import app from './app';
+import { app, connectToDatabase } from './app';
 import Logger from './core/Logger';
 
-app
-  .listen(port, () => {
-    Logger.info(`server running on port...... : ${port}`);
-  })
-  .on('error', (e) => console.log(e));
+async function startServer() {
+  try {
+    await connectToDatabase();
+    
+    app.listen(port, () => {
+      Logger.info(`Server running on port: ${port}`);
+    }).on('error', (e) => {
+      Logger.error('Server error:', e);
+      process.exit(1);
+    });
+    
+  } catch (error) {
+    Logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

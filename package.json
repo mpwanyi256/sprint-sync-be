@@ -21,11 +21,13 @@
   "dependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/mongoose": "^5.11.97",
     "@types/node": "^24.3.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
+    "mongoose": "^8.18.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
