@@ -1,0 +1,9 @@
+import { port } from './config';
+import app from './app';
+import Logger from './core/Logger';
+
+app
+  .listen(port, () => {
+    Logger.info(`server running on port...... : ${port}`);
+  })
+  .on('error', (e) => console.log(e));
