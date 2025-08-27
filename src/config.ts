@@ -18,7 +18,15 @@ const dbUri = isDev
   : `mongodb+srv://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@sprintsync.q5lzcgb.mongodb.net/${dbName}?retryWrites=true&w=majority`;
 
 export const db = {
+  apikey: process.env.DB_API_KEY || '',
   uri: dbUri,
   minPoolSize: dbMinPoolSize,
   maxPoolSize: dbMaxPoolSize,
 };
+
+export const tokenInfo = {
+  issuer: process.env.JWT_ISSUER || 'sprint-sync',
+  audience: process.env.JWT_AUDIENCE || 'sprint-sync',
+  accessTokenValidity: process.env.JWT_ACCESS_TOKEN_VALIDITY || '1h',
+  refreshTokenValidity: process.env.JWT_REFRESH_TOKEN_VALIDITY || '7d',
+}

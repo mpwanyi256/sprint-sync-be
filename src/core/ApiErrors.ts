@@ -20,6 +20,7 @@ import { environment } from '../config';
     NO_DATA = 'NoDataError',
     BAD_REQUEST = 'BadRequestError',
     FORBIDDEN = 'ForbiddenError',
+    DATABASE = 'DatabaseError',
   }
 
 export abstract class ApiError extends Error {
@@ -45,6 +46,8 @@ export abstract class ApiError extends Error {
           return new BadRequestResponse(err.message).send(res);
         case ErrorType.FORBIDDEN:
           return new ForbiddenResponse(err.message).send(res);
+        case ErrorType.DATABASE:
+          return new InternalErrorResponse(err.message).send(res);
         default: {
           let message = err.message;
           // Do not send failure message in production as it may send sensitive data
@@ -112,5 +115,11 @@ export class AuthFailureError extends ApiError {
   export class AccessTokenError extends ApiError {
     constructor(message = 'Invalid access token') {
       super(ErrorType.ACCESS_TOKEN, message);
+    }
+  }
+
+  export class DatabaseError extends ApiError {
+    constructor(message = 'Database operation failed', public originalError?: any) {
+      super(ErrorType.DATABASE, message);
     }
   }

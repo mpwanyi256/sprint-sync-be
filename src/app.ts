@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import { corsUrl, environment } from './config';
+import { corsUrl, environment, isDev } from './config';
 import routes from './routes';
 import { ApiError, ErrorType, InternalError, NotFoundError } from './core/ApiErrors';
 import Logger from './core/Logger';
@@ -36,7 +36,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
             `500 - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`,
           );
           Logger.error(err);
-          if (environment === 'development') {
+          if (isDev) {
             return res.status(500).send(err);
           }
       ApiError.handle(new InternalError(), res);

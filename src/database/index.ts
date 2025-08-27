@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { db } from '../config';
 import Logger from '../core/Logger';
+import { initializeDBData } from './initializeData';
 
 const options = {
     autoIndex: true,
@@ -50,6 +51,7 @@ export async function connectToDatabase(): Promise<void> {
         await Promise.race([connectionPromise, timeoutPromise]);
         
         isConnected = true;
+        await initializeDBData(mongoose);
         Logger.info('Mongoose connection established successfully');
         
         mongoose.connection.on('connected', () => {

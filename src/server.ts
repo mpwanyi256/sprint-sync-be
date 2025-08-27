@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import { port } from './config';
 import { app, connectToDatabase } from './app';
 import Logger from './core/Logger';
