@@ -1,20 +1,24 @@
 import { ITask } from '../../models/Task';
 
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+
 export interface CreateTaskDto {
   title: string;
   description: string;
   createdBy: string;
   totalMinutes: number;
+  status?: TaskStatus;
 }
 
 export interface UpdateTaskDto {
   title?: string;
   description?: string;
   totalMinutes?: number;
+  status?: TaskStatus;
 }
 
 export interface TaskFilters {
-  status?: string;
+  status?: TaskStatus;
   assignee?: string;
   createdBy?: string;
   title?: string;

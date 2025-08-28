@@ -1,5 +1,5 @@
 import { TaskModel } from '../models/Task';
-import { ITask } from '../models/Task';
+import { ITask, TaskStatus } from '../models/Task';
 import { DatabaseError } from '../core/ApiErrors';
 import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from './interfaces/ITaskRepository';
 import Logger from '../core/Logger';
@@ -94,10 +94,9 @@ export class TaskRepository implements ITaskRepository {
         filterQuery.description = { $regex: filters.description, $options: 'i' };
       }
       
-      // For status and assignee, we'll need to join with related collections
-      // For now, we'll implement basic filtering and can extend later
+      // Implement status filter
       if (filters.status) {
-        Logger.debug(`Status filter requested: ${filters.status} (not implemented yet)`);
+        filterQuery.status = filters.status;
       }
       
       if (filters.assignee) {
@@ -118,7 +117,7 @@ export class TaskRepository implements ITaskRepository {
         .lean()
         .exec();
       
-      Logger.debug(`Found ${tasks.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}`);
+      Logger.debug(`Found ${tasks.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}, Status filter: ${filters.status || 'none'}`);
       
       return {
         tasks: tasks as ITask[],

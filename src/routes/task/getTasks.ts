@@ -5,6 +5,7 @@ import { ProtectedRequest } from "../../types/AppRequests";
 import schema from "./schema";
 import asyncHandler from "../../core/AsyncHandler";
 import { Router } from "express";
+import { TaskStatus } from "../../repositories/interfaces/ITaskRepository";
 
 const router = Router();
 
@@ -16,7 +17,7 @@ router.get(
     // Extract query parameters for pagination and filtering
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    const status = req.query.status as string;
+    const status = req.query.status as TaskStatus | undefined;
     const assignee = req.query.assignee as string;
     const createdBy = req.query.createdBy as string;
     const title = req.query.title as string;

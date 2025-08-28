@@ -15,4 +15,10 @@ export default {
         title: Joi.string().optional(),
         description: Joi.string().optional(),
     }),
+    updateTask: Joi.object().keys({
+        title: Joi.string().optional(),
+        description: Joi.string().optional(),
+        totalMinutes: Joi.number().optional(),
+        status: Joi.string().optional(),
+    }),
 };

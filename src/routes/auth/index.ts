@@ -9,6 +9,8 @@ import { createTokens } from '../../helpers/authUtils';
 import { SuccessResponse } from '../../core/ApiResponses';
 import { getUserData } from './utils';
 import { KeystoreRepository } from '../../repositories/KeystoreRepository';
+import { ProtectedRequest } from '../../types/AppRequests';
+import authentication from '../../middleware/authentication';
 
 const router = Router();
 const keystoreRepository = new KeystoreRepository();
@@ -53,6 +55,15 @@ router.post(
       user: userData,
       tokens,
     }).send(res);
+}));
+
+router.use(authentication);
+
+router.get(
+  '/me',
+  asyncHandler(async (req: ProtectedRequest, res) => {
+  const userData = getUserData(req.user);
+  new SuccessResponse('User details', userData).send(res);
 }));
 
 export default router;

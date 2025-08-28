@@ -64,13 +64,17 @@ export class TaskService {
     }
     
     // Validate filters
-    if (filters.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(filters.status)) {
-      throw new BadRequestError('Invalid status filter. Must be one of: pending, in_progress, completed, cancelled');
+    if (filters.status && !['TODO', 'IN_PROGRESS', 'DONE'].includes(filters.status)) {
+      throw new BadRequestError('Invalid status filter. Must be one of: TODO, IN_PROGRESS, DONE');
     }
     
-    Logger.debug(`Fetching tasks with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`, filters);
+    Logger.debug(`Fetching tasks with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`, JSON.stringify(filters));
     
-    return await this.taskRepo.findAllWithPagination(filters, pagination);
+    const result = await this.taskRepo.findAllWithPagination(filters, pagination);
+    
+    Logger.debug(`Task service returned ${result.tasks.length} tasks for status: ${filters.status || 'all'}`);
+    
+    return result;
   }
 
   async updateTask(id: string, taskData: UpdateTaskDto, userId: string): Promise<ITask> {
@@ -78,11 +82,6 @@ export class TaskService {
     const existingTask = await this.taskRepo.findById(id);
     if (!existingTask) {
       throw new NotFoundError('Task not found');
-    }
-
-    // Check if user is the creator of the task
-    if (existingTask.createdBy.toString() !== userId) {
-      throw new BadRequestError('You can only update tasks you created');
     }
 
     // Validate update data

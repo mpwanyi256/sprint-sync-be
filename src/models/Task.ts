@@ -1,12 +1,14 @@
 import { Schema, model, Types } from 'mongoose';
 
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+
 export interface ITask {
   _id?: Types.ObjectId;
   title: string;
   description: string;
   createdBy: Types.ObjectId;
   totalMinutes: number;
-  status: 'TODO' | 'IN_PROGRESS' | 'DONE';
+  status: TaskStatus;
   createdAt: Date;
   updatedAt: Date;
 }

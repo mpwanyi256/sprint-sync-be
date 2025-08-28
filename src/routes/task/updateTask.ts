@@ -4,27 +4,25 @@ import { taskService } from "../../services/task";
 import { ProtectedRequest } from "../../types/AppRequests";
 import asyncHandler from "../../core/AsyncHandler";
 import { Router } from "express";
+import schema from "./schema";
+import validator, { ValidationSource } from "../../helpers/validator";
 
 const router = Router();
 
 // Update task
 router.patch(
     '/:id',
+    validator(schema.updateTask, ValidationSource.PARAM),
     asyncHandler(async (req: ProtectedRequest, res) => {
       const { id } = req.params;
-      const { title, description, totalMinutes } = req.body;
-      
-      // Get user ID from authenticated request
-      const userId = req.user?._id?.toString();
-      
-      if (!userId) {
-        throw new BadRequestError('User authentication required');
-      }
+      const { title, description, totalMinutes, status } = req.body;
+      const userId = req.user._id.toString();
   
       const updatedTask = await taskService.updateTask(id, {
         title,
         description,
-        totalMinutes
+        totalMinutes,
+        status,
       }, userId);
   
       const formattedTask = {
