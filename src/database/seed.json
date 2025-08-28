@@ -1,0 +1,80 @@
+{
+  "users": [
+    {
+      "firstName": "John",
+      "lastName": "Smith",
+      "email": "john.smith@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Sarah",
+      "lastName": "Johnson",
+      "email": "sarah.johnson@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Michael",
+      "lastName": "Brown",
+      "email": "michael.brown@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Emily",
+      "lastName": "Davis",
+      "email": "emily.davis@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "David",
+      "lastName": "Wilson",
+      "email": "david.wilson@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Lisa",
+      "lastName": "Anderson",
+      "email": "lisa.anderson@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Robert",
+      "lastName": "Taylor",
+      "email": "robert.taylor@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Jennifer",
+      "lastName": "Martinez",
+      "email": "jennifer.martinez@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Christopher",
+      "lastName": "Garcia",
+      "email": "christopher.garcia@company.com",
+      "password": "password123",
+      "isAdmin": false
+    },
+    {
+      "firstName": "Amanda",
+      "lastName": "Rodriguez",
+      "email": "amanda.rodriguez@company.com",
+      "password": "password123",
+      "isAdmin": false
+    }
+  ],
+  "metadata": {
+    "version": "1.0.0",
+    "description": "Seed data for SprintSync application",
+    "lastUpdated": "2024-01-01",
+    "notes": "Default users for development and testing. All users have password: password123"
+  }
+}

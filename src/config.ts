@@ -25,8 +25,10 @@ export const db = {
 };
 
 export const tokenInfo = {
-  issuer: process.env.JWT_ISSUER || 'sprint-sync',
-  audience: process.env.JWT_AUDIENCE || 'sprint-sync',
-  accessTokenValidity: process.env.JWT_ACCESS_TOKEN_VALIDITY || '1h',
-  refreshTokenValidity: process.env.JWT_REFRESH_TOKEN_VALIDITY || '7d',
+  issuer: process.env.JWT_ISSUER!,
+  audience: process.env.JWT_AUDIENCE!,
+  accessTokenValidity: Number(process.env.JWT_ACCESS_TOKEN_VALIDITY)!,
+  refreshTokenValidity: Number(process.env.JWT_REFRESH_TOKEN_VALIDITY)!,
 }
+
+export const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';

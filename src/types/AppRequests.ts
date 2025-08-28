@@ -36,3 +36,13 @@ export interface Keystore {
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+export interface PublicRequest extends Request {
+    apiKey: ApiKey;
+}
+
+export interface ProtectedRequest extends PublicRequest {
+    user: User;
+    accessToken: string;
+    keystore: Keystore;
+}

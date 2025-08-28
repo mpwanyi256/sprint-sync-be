@@ -4,7 +4,6 @@ import schema from './schema';
 import validator from '../../helpers/validator';
 import asyncHandler from '../../core/AsyncHandler';
 import { userService } from '../../services/user';
-import { BadRequestError } from '../../core/ApiErrors';
 import { TokenFactory } from '../../core/TokenFactory';
 import { createTokens } from '../../helpers/authUtils';
 import { SuccessResponse } from '../../core/ApiResponses';
@@ -46,7 +45,7 @@ router.post(
     const user = await userService.authenticateUser(email, password);
     const { accessKey, refreshKey } = TokenFactory.createTokenPair();
     
-    const keystore = await keystoreRepository.create(user, accessKey, refreshKey);
+    await keystoreRepository.create(user, accessKey, refreshKey);
     const tokens = await createTokens(user, accessKey, refreshKey);
     const userData = getUserData(user);
 

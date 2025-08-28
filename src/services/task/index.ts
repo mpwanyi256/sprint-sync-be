@@ -1,0 +1,125 @@
+import { ITask } from '../../models/Task';
+import { BadRequestError, NotFoundError } from '../../core/ApiErrors';
+import { TaskRepository } from '../../repositories/TaskRepository';
+import { ITaskRepository, CreateTaskDto, UpdateTaskDto } from '../../repositories/interfaces/ITaskRepository';
+import Logger from '../../core/Logger';
+
+export class TaskService {
+  constructor(
+    private taskRepo: ITaskRepository = new TaskRepository()
+  ) {}
+
+  async createTask(taskData: CreateTaskDto): Promise<ITask> {
+    // Validate task data
+    if (!taskData.title || taskData.title.trim().length === 0) {
+      throw new BadRequestError('Task title is required');
+    }
+
+    if (!taskData.description || taskData.description.trim().length === 0) {
+      throw new BadRequestError('Task description is required');
+    }
+
+    if (!taskData.totalMinutes || taskData.totalMinutes < 1) {
+      throw new BadRequestError('Task duration must be at least 1 minute');
+    }
+
+    if (taskData.totalMinutes > 10080) { // Max 1 week
+      throw new BadRequestError('Task duration cannot exceed 1 week');
+    }
+
+    Logger.info(`Creating task: ${taskData.title} for user: ${taskData.createdBy}`);
+    
+    const task = await this.taskRepo.create(taskData);
+    Logger.info(`Task created successfully with ID: ${task._id}`);
+    
+    return task;
+  }
+
+  async getTaskById(id: string): Promise<ITask> {
+    const task = await this.taskRepo.findById(id);
+    if (!task) {
+      throw new NotFoundError('Task not found');
+    }
+    return task;
+  }
+
+  async getTasksByUser(userId: string): Promise<ITask[]> {
+    Logger.debug(`Fetching tasks for user: ${userId}`);
+    return await this.taskRepo.findByUser(userId);
+  }
+
+  async getAllTasks(): Promise<ITask[]> {
+    Logger.debug('Fetching all tasks');
+    return await this.taskRepo.findAll();
+  }
+
+  async updateTask(id: string, taskData: UpdateTaskDto, userId: string): Promise<ITask> {
+    // First check if task exists and user has permission
+    const existingTask = await this.taskRepo.findById(id);
+    if (!existingTask) {
+      throw new NotFoundError('Task not found');
+    }
+
+    // Check if user is the creator of the task
+    if (existingTask.createdBy.toString() !== userId) {
+      throw new BadRequestError('You can only update tasks you created');
+    }
+
+    // Validate update data
+    if (taskData.title !== undefined && taskData.title.trim().length === 0) {
+      throw new BadRequestError('Task title cannot be empty');
+    }
+
+    if (taskData.description !== undefined && taskData.description.trim().length === 0) {
+      throw new BadRequestError('Task description cannot be empty');
+    }
+
+    if (taskData.totalMinutes !== undefined && (taskData.totalMinutes < 1 || taskData.totalMinutes > 10080)) {
+      throw new BadRequestError('Task duration must be between 1 minute and 1 week');
+    }
+
+    Logger.info(`Updating task: ${id} by user: ${userId}`);
+    
+    const updatedTask = await this.taskRepo.update(id, taskData);
+    if (!updatedTask) {
+      throw new NotFoundError('Task not found during update');
+    }
+
+    Logger.info(`Task updated successfully: ${updatedTask.title}`);
+    return updatedTask;
+  }
+
+  async deleteTask(id: string, userId: string): Promise<boolean> {
+    // First check if task exists and user has permission
+    const existingTask = await this.taskRepo.findById(id);
+    if (!existingTask) {
+      throw new NotFoundError('Task not found');
+    }
+
+    // Check if user is the creator of the task
+    if (existingTask.createdBy.toString() !== userId) {
+      throw new BadRequestError('You can only delete tasks you created');
+    }
+
+    Logger.info(`Deleting task: ${id} by user: ${userId}`);
+    
+    const success = await this.taskRepo.delete(id);
+    if (success) {
+      Logger.info(`Task deleted successfully: ${id}`);
+    }
+    
+    return success;
+  }
+
+  async searchTasks(searchTerm: string): Promise<ITask[]> {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      throw new BadRequestError('Search term is required');
+    }
+
+    Logger.debug(`Searching tasks with term: ${searchTerm}`);
+    return await this.taskRepo.searchByText(searchTerm);
+  }
+}
+
+// Export service instance for backward compatibility
+export const taskService = new TaskService();

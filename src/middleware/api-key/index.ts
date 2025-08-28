@@ -2,7 +2,7 @@ import express from 'express';
 import ApiKeyService from '../../services/apiKey';
 import { ForbiddenError } from '../../core/ApiErrors';
 import { PublicRequest } from '../../types/AppRequests';
-import schema from './schema';
+import schema from '../schema';
 import validator, { ValidationSource } from '../../helpers/validator';
 import asyncHandler from '../../core/AsyncHandler';
 import { Header } from '../../core/utils';

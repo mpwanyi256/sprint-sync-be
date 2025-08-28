@@ -29,6 +29,29 @@ export class KeystoreRepository implements IKeystoreRepository {
     }
   }
 
+  async findforKey(client: User, key: string): Promise<Keystore | null> {
+    try {
+      const keystore = await KeystoreModel
+        .findOne({
+          client: client,
+          primaryKey: key,
+          status: true,
+        })
+        .lean()
+        .exec();
+      
+      if (!keystore) {
+        Logger.debug(`Keystore not found for key: ${key}`);
+        return null;
+      }
+      
+      return keystore as Keystore;
+    } catch (error: any) {
+      Logger.error('Error finding keystore for key:', error);
+      throw new DatabaseError('Failed to find keystore for key', error);
+    }
+  }
+
   async create(client: User, primaryKey: string, secondaryKey: string): Promise<Keystore> {
     try {
       const now = new Date();
