@@ -1,7 +1,7 @@
 import { TaskModel } from '../models/Task';
 import { ITask } from '../models/Task';
 import { DatabaseError } from '../core/ApiErrors';
-import { ITaskRepository, CreateTaskDto, UpdateTaskDto } from './interfaces/ITaskRepository';
+import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from './interfaces/ITaskRepository';
 import Logger from '../core/Logger';
 
 export class TaskRepository implements ITaskRepository {
@@ -71,6 +71,69 @@ export class TaskRepository implements ITaskRepository {
     } catch (error: any) {
       Logger.error('Error finding all tasks:', error);
       throw new DatabaseError('Failed to find all tasks', error);
+    }
+  }
+
+  async findAllWithPagination(filters: TaskFilters, pagination: PaginationOptions): Promise<PaginatedTasksResult> {
+    try {
+      const { page, limit } = pagination;
+      const skip = (page - 1) * limit;
+      
+      // Build filter query
+      const filterQuery: any = {};
+      
+      if (filters.createdBy) {
+        filterQuery.createdBy = filters.createdBy;
+      }
+      
+      if (filters.title) {
+        filterQuery.title = { $regex: filters.title, $options: 'i' };
+      }
+      
+      if (filters.description) {
+        filterQuery.description = { $regex: filters.description, $options: 'i' };
+      }
+      
+      // For status and assignee, we'll need to join with related collections
+      // For now, we'll implement basic filtering and can extend later
+      if (filters.status) {
+        Logger.debug(`Status filter requested: ${filters.status} (not implemented yet)`);
+      }
+      
+      if (filters.assignee) {
+        Logger.debug(`Assignee filter requested: ${filters.assignee} (not implemented yet)`);
+      }
+      
+      // Get total count for pagination
+      const totalItems = await TaskModel.countDocuments(filterQuery);
+      const totalPages = Math.ceil(totalItems / limit);
+      
+      // Get paginated results
+      const tasks = await TaskModel
+        .find(filterQuery)
+        .populate('createdBy', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .exec();
+      
+      Logger.debug(`Found ${tasks.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}`);
+      
+      return {
+        tasks: tasks as ITask[],
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1
+        }
+      };
+    } catch (error: any) {
+      Logger.error('Error finding tasks with pagination:', error);
+      throw new DatabaseError('Failed to find tasks with pagination', error);
     }
   }
 

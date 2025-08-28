@@ -6,4 +6,13 @@ export default {
         description: Joi.string().required(),
         totalMinutes: Joi.number().required(),
     }),
+    getTasks: Joi.object().keys({
+        page: Joi.number().required(),
+        limit: Joi.number().required(),
+        status: Joi.string().optional(),
+        assignee: Joi.string().optional(),
+        createdBy: Joi.string().optional(),
+        title: Joi.string().optional(),
+        description: Joi.string().optional(),
+    }),
 };

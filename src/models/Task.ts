@@ -6,6 +6,7 @@ export interface ITask {
   description: string;
   createdBy: Types.ObjectId;
   totalMinutes: number;
+  status: 'TODO' | 'IN_PROGRESS' | 'DONE';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,6 +36,12 @@ const taskSchema = new Schema<ITask>({
     type: Number,
     required: true,
     min: 1,
+  },
+  status: {
+    type: String,
+    required: true,
+    enum: ['TODO', 'IN_PROGRESS', 'DONE'],
+    default: 'TODO'
   },
   createdAt: {
     type: Date,

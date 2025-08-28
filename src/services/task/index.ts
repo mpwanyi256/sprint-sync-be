@@ -1,7 +1,7 @@
 import { ITask } from '../../models/Task';
 import { BadRequestError, NotFoundError } from '../../core/ApiErrors';
 import { TaskRepository } from '../../repositories/TaskRepository';
-import { ITaskRepository, CreateTaskDto, UpdateTaskDto } from '../../repositories/interfaces/ITaskRepository';
+import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from '../../repositories/interfaces/ITaskRepository';
 import Logger from '../../core/Logger';
 
 export class TaskService {
@@ -51,6 +51,26 @@ export class TaskService {
   async getAllTasks(): Promise<ITask[]> {
     Logger.debug('Fetching all tasks');
     return await this.taskRepo.findAll();
+  }
+
+  async getAllTasksWithPagination(filters: TaskFilters, pagination: PaginationOptions): Promise<PaginatedTasksResult> {
+    // Validate pagination parameters
+    if (pagination.page < 1) {
+      throw new BadRequestError('Page number must be at least 1');
+    }
+    
+    if (pagination.limit < 1 || pagination.limit > 100) {
+      throw new BadRequestError('Limit must be between 1 and 100');
+    }
+    
+    // Validate filters
+    if (filters.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(filters.status)) {
+      throw new BadRequestError('Invalid status filter. Must be one of: pending, in_progress, completed, cancelled');
+    }
+    
+    Logger.debug(`Fetching tasks with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`, filters);
+    
+    return await this.taskRepo.findAllWithPagination(filters, pagination);
   }
 
   async updateTask(id: string, taskData: UpdateTaskDto, userId: string): Promise<ITask> {
