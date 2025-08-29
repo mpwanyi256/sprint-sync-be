@@ -42,6 +42,7 @@ router.get(
       description: task.description,
       totalMinutes: task.totalMinutes,
       createdBy: task.createdBy,
+      assignee: task.assignee,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
     }));
@@ -66,6 +67,7 @@ router.get(
       description: task.description,
       totalMinutes: task.totalMinutes,
       createdBy: task.createdBy,
+      assignee: task.assignee,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
     };
@@ -89,6 +91,7 @@ router.get(
       description: task.description,
       totalMinutes: task.totalMinutes,
       createdBy: task.createdBy,
+      assignee: task.assignee,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt
     }));

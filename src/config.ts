@@ -32,3 +32,5 @@ export const tokenInfo = {
 }
 
 export const jwtSecret = process.env.JWT_SECRET || 'dev-secret-key-change-in-production';
+
+export const openAIKey = process.env.OPENAI_KEY || '';

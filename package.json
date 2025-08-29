@@ -33,6 +33,7 @@
     "@types/lodash": "^4.17.20",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^24.3.0",
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
@@ -43,6 +44,7 @@
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
     "mongoose": "^8.18.0",
+    "openai": "^5.16.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },

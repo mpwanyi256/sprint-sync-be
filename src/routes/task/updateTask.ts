@@ -12,7 +12,7 @@ const router = Router();
 // Update task
 router.patch(
     '/:id',
-    validator(schema.updateTask, ValidationSource.PARAM),
+    validator(schema.updateTask, ValidationSource.BODY),
     asyncHandler(async (req: ProtectedRequest, res) => {
       const { id } = req.params;
       const { title, description, totalMinutes, status } = req.body;
@@ -31,13 +31,12 @@ router.patch(
         description: updatedTask.description,
         totalMinutes: updatedTask.totalMinutes,
         createdBy: updatedTask.createdBy,
+        assignee: updatedTask.assignee,
         createdAt: updatedTask.createdAt,
         updatedAt: updatedTask.updatedAt
       };
   
-      new SuccessResponse('Task updated successfully', {
-        task: formattedTask
-      }).send(res);
+      new SuccessResponse('Task updated successfully', formattedTask).send(res);
     })
   );
 

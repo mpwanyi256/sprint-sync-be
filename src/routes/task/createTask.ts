@@ -31,7 +31,6 @@ router.post(
       const createdTask = await taskService.getTaskById(task._id.toString());
   
       new SuccessResponse('Task created successfully', {
-        task: {
           id: createdTask._id,
           title: createdTask.title,
           status: createdTask.status,
@@ -40,7 +39,6 @@ router.post(
           createdBy: createdTask.createdBy,
           createdAt: createdTask.createdAt,
           updatedAt: createdTask.updatedAt
-        }
       }).send(res);
     })
   );

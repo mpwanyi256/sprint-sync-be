@@ -1,5 +1,6 @@
 import { TaskModel } from '../models/Task';
 import { ITask, TaskStatus } from '../models/Task';
+import { TaskAssignmentModel } from '../models/TaskAssignment';
 import { DatabaseError } from '../core/ApiErrors';
 import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from './interfaces/ITaskRepository';
 import Logger from '../core/Logger';
@@ -33,7 +34,20 @@ export class TaskRepository implements ITaskRepository {
         return null;
       }
       
-      return task as ITask;
+      // Get assignee information
+      const latestAssignment = await TaskAssignmentModel
+        .findOne({ task: task._id })
+        .sort({ updatedAt: -1 })
+        .populate('assignedTo', 'firstName lastName email')
+        .lean()
+        .exec();
+      
+      const taskWithAssignee = {
+        ...task,
+        assignee: latestAssignment ? latestAssignment.assignedTo : null
+      };
+      
+      return taskWithAssignee as ITask;
     } catch (error: any) {
       Logger.error('Error finding task by id:', error);
       throw new DatabaseError('Failed to find task by id', error);
@@ -49,8 +63,25 @@ export class TaskRepository implements ITaskRepository {
         .lean()
         .exec();
       
-      Logger.debug(`Found ${tasks.length} tasks for user: ${userId}`);
-      return tasks as ITask[];
+      // Get assignee information for each task
+      const tasksWithAssignees = await Promise.all(
+        tasks.map(async (task) => {
+          const latestAssignment = await TaskAssignmentModel
+            .findOne({ task: task._id })
+            .sort({ updatedAt: -1 })
+            .populate('assignedTo', 'firstName lastName email')
+            .lean()
+            .exec();
+          
+          return {
+            ...task,
+            assignee: latestAssignment ? latestAssignment.assignedTo : null
+          };
+        })
+      );
+      
+      Logger.debug(`Found ${tasksWithAssignees.length} tasks for user: ${userId}`);
+      return tasksWithAssignees as ITask[];
     } catch (error: any) {
       Logger.error('Error finding tasks by user:', error);
       throw new DatabaseError('Failed to find tasks by user', error);
@@ -66,8 +97,25 @@ export class TaskRepository implements ITaskRepository {
         .lean()
         .exec();
       
-      Logger.debug(`Found ${tasks.length} total tasks`);
-      return tasks as ITask[];
+      // Get assignee information for each task
+      const tasksWithAssignees = await Promise.all(
+        tasks.map(async (task) => {
+          const latestAssignment = await TaskAssignmentModel
+            .findOne({ task: task._id })
+            .sort({ updatedAt: -1 })
+            .populate('assignedTo', 'firstName lastName email')
+            .lean()
+            .exec();
+          
+          return {
+            ...task,
+            assignee: latestAssignment ? latestAssignment.assignedTo : null
+          };
+        })
+      );
+      
+      Logger.debug(`Found ${tasksWithAssignees.length} total tasks`);
+      return tasksWithAssignees as ITask[];
     } catch (error: any) {
       Logger.error('Error finding all tasks:', error);
       throw new DatabaseError('Failed to find all tasks', error);
@@ -117,10 +165,27 @@ export class TaskRepository implements ITaskRepository {
         .lean()
         .exec();
       
-      Logger.debug(`Found ${tasks.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}, Status filter: ${filters.status || 'none'}`);
+      // Get assignee information for each task
+      const tasksWithAssignees = await Promise.all(
+        tasks.map(async (task) => {
+          const latestAssignment = await TaskAssignmentModel
+            .findOne({ task: task._id })
+            .sort({ updatedAt: -1 })
+            .populate('assignedTo', 'firstName lastName email')
+            .lean()
+            .exec();
+          
+          return {
+            ...task,
+            assignee: latestAssignment ? latestAssignment.assignedTo : null
+          };
+        })
+      );
+      
+      Logger.debug(`Found ${tasksWithAssignees.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}, Status filter: ${filters.status || 'none'}`);
       
       return {
-        tasks: tasks as ITask[],
+        tasks: tasksWithAssignees as ITask[],
         pagination: {
           currentPage: page,
           totalPages,
@@ -153,8 +218,21 @@ export class TaskRepository implements ITaskRepository {
         return null;
       }
       
+      // Get assignee information
+      const latestAssignment = await TaskAssignmentModel
+        .findOne({ task: task._id })
+        .sort({ updatedAt: -1 })
+        .populate('assignedTo', 'firstName lastName email')
+        .lean()
+        .exec();
+      
+      const taskWithAssignee = {
+        ...task,
+        assignee: latestAssignment ? latestAssignment.assignedTo : null
+      };
+      
       Logger.info(`Task updated: ${task.title}`);
-      return task as ITask;
+      return taskWithAssignee as ITask;
     } catch (error: any) {
       Logger.error('Error updating task:', error);
       throw new DatabaseError('Failed to update task', error);
@@ -191,8 +269,25 @@ export class TaskRepository implements ITaskRepository {
         .lean()
         .exec();
       
-      Logger.debug(`Found ${tasks.length} tasks matching search: ${searchTerm}`);
-      return tasks as ITask[];
+      // Get assignee information for each task
+      const tasksWithAssignees = await Promise.all(
+        tasks.map(async (task) => {
+          const latestAssignment = await TaskAssignmentModel
+            .findOne({ task: task._id })
+            .sort({ updatedAt: -1 })
+            .populate('assignedTo', 'firstName lastName email')
+            .lean()
+            .exec();
+          
+          return {
+            ...task,
+            assignee: latestAssignment ? latestAssignment.assignedTo : null
+          };
+        })
+      );
+      
+      Logger.debug(`Found ${tasksWithAssignees.length} tasks matching search: ${searchTerm}`);
+      return tasksWithAssignees as ITask[];
     } catch (error: any) {
       Logger.error('Error searching tasks by text:', error);
       throw new DatabaseError('Failed to search tasks by text', error);

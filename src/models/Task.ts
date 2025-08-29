@@ -9,6 +9,7 @@ export interface ITask {
   createdBy: Types.ObjectId;
   totalMinutes: number;
   status: TaskStatus;
+  assignee?: any;
   createdAt: Date;
   updatedAt: Date;
 }
