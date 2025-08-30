@@ -1,8 +1,15 @@
 import { TaskModel } from '../models/Task';
-import { ITask, TaskStatus } from '../models/Task';
+import { ITask } from '../models/Task';
 import { TaskAssignmentModel } from '../models/TaskAssignment';
 import { DatabaseError } from '../core/ApiErrors';
-import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from './interfaces/ITaskRepository';
+import {
+  ITaskRepository,
+  CreateTaskDto,
+  UpdateTaskDto,
+  TaskFilters,
+  PaginationOptions,
+  PaginatedTasksResult,
+} from './interfaces/ITaskRepository';
 import Logger from '../core/Logger';
 
 export class TaskRepository implements ITaskRepository {
@@ -10,9 +17,9 @@ export class TaskRepository implements ITaskRepository {
     try {
       const task = await TaskModel.create({
         ...taskData,
-        createdBy: taskData.createdBy
+        createdBy: taskData.createdBy,
       });
-      
+
       Logger.info(`Task created: ${task.title} by user ${taskData.createdBy}`);
       return task.toObject() as ITask;
     } catch (error: any) {
@@ -23,30 +30,30 @@ export class TaskRepository implements ITaskRepository {
 
   async findById(id: string): Promise<ITask | null> {
     try {
-      const task = await TaskModel
-        .findById(id)
+      const task = await TaskModel.findById(id)
         .populate('createdBy', 'firstName lastName email')
         .lean()
         .exec();
-      
+
       if (!task) {
         Logger.debug(`Task not found for id: ${id}`);
         return null;
       }
-      
+
       // Get assignee information
-      const latestAssignment = await TaskAssignmentModel
-        .findOne({ task: task._id })
+      const latestAssignment = await TaskAssignmentModel.findOne({
+        task: task._id,
+      })
         .sort({ updatedAt: -1 })
         .populate('assignedTo', '_id firstName lastName email')
         .lean()
         .exec();
-      
+
       const taskWithAssignee = {
         ...task,
-        assignee: latestAssignment ? latestAssignment.assignedTo : null
+        assignee: latestAssignment ? latestAssignment.assignedTo : null,
       };
-      
+
       return taskWithAssignee as ITask;
     } catch (error: any) {
       Logger.error('Error finding task by id:', error);
@@ -56,31 +63,33 @@ export class TaskRepository implements ITaskRepository {
 
   async findByUser(userId: string): Promise<ITask[]> {
     try {
-      const tasks = await TaskModel
-        .find({ createdBy: userId })
+      const tasks = await TaskModel.find({ createdBy: userId })
         .populate('createdBy', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .lean()
         .exec();
-      
+
       // Get assignee information for each task
       const tasksWithAssignees = await Promise.all(
-        tasks.map(async (task) => {
-          const latestAssignment = await TaskAssignmentModel
-            .findOne({ task: task._id })
+        tasks.map(async task => {
+          const latestAssignment = await TaskAssignmentModel.findOne({
+            task: task._id,
+          })
             .sort({ updatedAt: -1 })
             .populate('assignedTo', 'firstName lastName email')
             .lean()
             .exec();
-          
+
           return {
             ...task,
-            assignee: latestAssignment ? latestAssignment.assignedTo : null
+            assignee: latestAssignment ? latestAssignment.assignedTo : null,
           };
         })
       );
-      
-      Logger.debug(`Found ${tasksWithAssignees.length} tasks for user: ${userId}`);
+
+      Logger.debug(
+        `Found ${tasksWithAssignees.length} tasks for user: ${userId}`
+      );
       return tasksWithAssignees as ITask[];
     } catch (error: any) {
       Logger.error('Error finding tasks by user:', error);
@@ -90,30 +99,30 @@ export class TaskRepository implements ITaskRepository {
 
   async findAll(): Promise<ITask[]> {
     try {
-      const tasks = await TaskModel
-        .find()
+      const tasks = await TaskModel.find()
         .populate('createdBy', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .lean()
         .exec();
-      
+
       // Get assignee information for each task
       const tasksWithAssignees = await Promise.all(
-        tasks.map(async (task) => {
-          const latestAssignment = await TaskAssignmentModel
-            .findOne({ task: task._id })
+        tasks.map(async task => {
+          const latestAssignment = await TaskAssignmentModel.findOne({
+            task: task._id,
+          })
             .sort({ updatedAt: -1 })
             .populate('assignedTo', 'firstName lastName email')
             .lean()
             .exec();
-          
+
           return {
             ...task,
-            assignee: latestAssignment ? latestAssignment.assignedTo : null
+            assignee: latestAssignment ? latestAssignment.assignedTo : null,
           };
         })
       );
-      
+
       Logger.debug(`Found ${tasksWithAssignees.length} total tasks`);
       return tasksWithAssignees as ITask[];
     } catch (error: any) {
@@ -122,68 +131,78 @@ export class TaskRepository implements ITaskRepository {
     }
   }
 
-  async findAllWithPagination(filters: TaskFilters, pagination: PaginationOptions): Promise<PaginatedTasksResult> {
+  async findAllWithPagination(
+    filters: TaskFilters,
+    pagination: PaginationOptions
+  ): Promise<PaginatedTasksResult> {
     try {
       const { page, limit } = pagination;
       const skip = (page - 1) * limit;
-      
+
       // Build filter query
       const filterQuery: any = {};
-      
+
       if (filters.createdBy) {
         filterQuery.createdBy = filters.createdBy;
       }
-      
+
       if (filters.title) {
         filterQuery.title = { $regex: filters.title, $options: 'i' };
       }
-      
+
       if (filters.description) {
-        filterQuery.description = { $regex: filters.description, $options: 'i' };
+        filterQuery.description = {
+          $regex: filters.description,
+          $options: 'i',
+        };
       }
-      
+
       // Implement status filter
       if (filters.status) {
         filterQuery.status = filters.status;
       }
-      
+
       if (filters.assignee) {
-        Logger.debug(`Assignee filter requested: ${filters.assignee} (not implemented yet)`);
+        Logger.debug(
+          `Assignee filter requested: ${filters.assignee} (not implemented yet)`
+        );
       }
-      
+
       // Get total count for pagination
       const totalItems = await TaskModel.countDocuments(filterQuery);
       const totalPages = Math.ceil(totalItems / limit);
-      
+
       // Get paginated results
-      const tasks = await TaskModel
-        .find(filterQuery)
+      const tasks = await TaskModel.find(filterQuery)
         .populate('createdBy', 'firstName lastName email')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean()
         .exec();
-      
+
       // Get assignee information for each task
       const tasksWithAssignees = await Promise.all(
-        tasks.map(async (task) => {
-          const latestAssignment = await TaskAssignmentModel
-            .findOne({ task: task._id })
+        tasks.map(async task => {
+          const latestAssignment = await TaskAssignmentModel.findOne({
+            task: task._id,
+          })
             .sort({ updatedAt: -1 })
             .populate('assignedTo', 'firstName lastName email')
             .lean()
             .exec();
-          
+
           return {
             ...task,
-            assignee: latestAssignment ? latestAssignment.assignedTo : null
+            assignee: latestAssignment ? latestAssignment.assignedTo : null,
           };
         })
       );
-      
-      Logger.debug(`Found ${tasksWithAssignees.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}, Status filter: ${filters.status || 'none'}`);
-      
+
+      Logger.debug(
+        `Found ${tasksWithAssignees.length} tasks with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}, Status filter: ${filters.status || 'none'}`
+      );
+
       return {
         tasks: tasksWithAssignees as ITask[],
         pagination: {
@@ -192,8 +211,8 @@ export class TaskRepository implements ITaskRepository {
           totalItems,
           itemsPerPage: limit,
           hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1
-        }
+          hasPreviousPage: page > 1,
+        },
       };
     } catch (error: any) {
       Logger.error('Error finding tasks with pagination:', error);
@@ -203,34 +222,34 @@ export class TaskRepository implements ITaskRepository {
 
   async update(id: string, taskData: UpdateTaskDto): Promise<ITask | null> {
     try {
-      const task = await TaskModel
-        .findByIdAndUpdate(
-          id,
-          { ...taskData, updatedAt: new Date() },
-          { new: true, runValidators: true }
-        )
+      const task = await TaskModel.findByIdAndUpdate(
+        id,
+        { ...taskData, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      )
         .populate('createdBy', 'firstName lastName email')
         .lean()
         .exec();
-      
+
       if (!task) {
         Logger.debug(`Task not found for update with id: ${id}`);
         return null;
       }
-      
+
       // Get assignee information
-      const latestAssignment = await TaskAssignmentModel
-        .findOne({ task: task._id })
+      const latestAssignment = await TaskAssignmentModel.findOne({
+        task: task._id,
+      })
         .sort({ updatedAt: -1 })
         .populate('assignedTo', 'firstName lastName email')
         .lean()
         .exec();
-      
+
       const taskWithAssignee = {
         ...task,
-        assignee: latestAssignment ? latestAssignment.assignedTo : null
+        assignee: latestAssignment ? latestAssignment.assignedTo : null,
       };
-      
+
       Logger.info(`Task updated: ${task.title}`);
       return taskWithAssignee as ITask;
     } catch (error: any) {
@@ -243,13 +262,13 @@ export class TaskRepository implements ITaskRepository {
     try {
       const result = await TaskModel.findByIdAndDelete(id).lean().exec();
       const success = !!result;
-      
+
       if (success) {
         Logger.info(`Task deleted with id: ${id}`);
       } else {
         Logger.debug(`Task not found for deletion with id: ${id}`);
       }
-      
+
       return success;
     } catch (error: any) {
       Logger.error('Error deleting task:', error);
@@ -259,35 +278,37 @@ export class TaskRepository implements ITaskRepository {
 
   async searchByText(searchTerm: string): Promise<ITask[]> {
     try {
-      const tasks = await TaskModel
-        .find(
-          { $text: { $search: searchTerm } },
-          { score: { $meta: 'textScore' } }
-        )
+      const tasks = await TaskModel.find(
+        { $text: { $search: searchTerm } },
+        { score: { $meta: 'textScore' } }
+      )
         .populate('createdBy', 'firstName lastName email')
         .sort({ score: { $meta: 'textScore' } })
         .limit(10)
         .lean()
         .exec();
-      
+
       // Get assignee information for each task
       const tasksWithAssignees = await Promise.all(
-        tasks.map(async (task) => {
-          const latestAssignment = await TaskAssignmentModel
-            .findOne({ task: task._id })
+        tasks.map(async task => {
+          const latestAssignment = await TaskAssignmentModel.findOne({
+            task: task._id,
+          })
             .sort({ updatedAt: -1 })
             .populate('assignedTo', 'firstName lastName email')
             .lean()
             .exec();
-          
+
           return {
             ...task,
-            assignee: latestAssignment ? latestAssignment.assignedTo : null
+            assignee: latestAssignment ? latestAssignment.assignedTo : null,
           };
         })
       );
-      
-      Logger.debug(`Found ${tasksWithAssignees.length} tasks matching search: ${searchTerm}`);
+
+      Logger.debug(
+        `Found ${tasksWithAssignees.length} tasks matching search: ${searchTerm}`
+      );
       return tasksWithAssignees as ITask[];
     } catch (error: any) {
       Logger.error('Error searching tasks by text:', error);
@@ -295,7 +316,11 @@ export class TaskRepository implements ITaskRepository {
     }
   }
 
-  async assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask | null> {
+  async assignTask(
+    taskId: string,
+    assignedTo: string,
+    assignedBy: string
+  ): Promise<ITask | null> {
     try {
       // First check if task exists
       const task = await TaskModel.findById(taskId).lean().exec();
@@ -309,7 +334,7 @@ export class TaskRepository implements ITaskRepository {
         task: taskId,
         assignedTo,
         assignedBy,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       await TaskAssignmentModel.findOneAndUpdate(
@@ -318,7 +343,9 @@ export class TaskRepository implements ITaskRepository {
         { upsert: true, new: true, runValidators: true }
       );
 
-      Logger.info(`Task assignment created/updated: ${taskId} -> ${assignedTo}`);
+      Logger.info(
+        `Task assignment created/updated: ${taskId} -> ${assignedTo}`
+      );
 
       // Return the task with updated assignee information
       const taskWithAssignee = await this.findById(taskId);
@@ -329,7 +356,7 @@ export class TaskRepository implements ITaskRepository {
     }
   }
 
-  async unassignTask(taskId: string, userId: string): Promise<ITask | null> {
+  async unassignTask(taskId: string, _userId: string): Promise<ITask | null> {
     try {
       // First check if task exists
       const task = await TaskModel.findById(taskId).lean().exec();

@@ -1,0 +1,8 @@
+# Run lint-staged to check and fix linting issues
+npx lint-staged
+
+# Run TypeScript type checking
+yarn check
+
+# If everything passes, the commit will proceed
+echo "✅ Pre-commit checks passed!"

@@ -1,6 +1,13 @@
 {
   "users": [
     {
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@sprintsync.com",
+      "password": "password123",
+      "isAdmin": true
+    },
+    {
       "firstName": "John",
       "lastName": "Smith",
       "email": "john.smith@company.com",
@@ -71,10 +78,102 @@
       "isAdmin": false
     }
   ],
+  "tasks": [
+    {
+      "title": "Setup Project Infrastructure",
+      "description": "Initialize the project with proper folder structure, dependencies, and development environment setup.",
+      "totalMinutes": 240,
+      "status": "DONE"
+    },
+    {
+      "title": "Implement User Authentication",
+      "description": "Create user registration, login, and JWT-based authentication system with secure password hashing.",
+      "totalMinutes": 360,
+      "status": "DONE"
+    },
+    {
+      "title": "Design Database Schema",
+      "description": "Design and implement MongoDB schemas for users, tasks, task assignments, and keystores.",
+      "totalMinutes": 180,
+      "status": "DONE"
+    },
+    {
+      "title": "Create Task Management API",
+      "description": "Implement CRUD operations for tasks including creation, reading, updating, and deletion with proper validation.",
+      "totalMinutes": 300,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "title": "Add Task Assignment System",
+      "description": "Allow users to assign tasks to other team members and track assignment history.",
+      "totalMinutes": 240,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "title": "Implement User Management",
+      "description": "Create endpoints for user listing, search, and profile management with pagination support.",
+      "totalMinutes": 180,
+      "status": "TODO"
+    },
+    {
+      "title": "Add AI Task Suggestions",
+      "description": "Integrate OpenAI API to generate task descriptions from brief titles with streaming responses.",
+      "totalMinutes": 300,
+      "status": "IN_PROGRESS"
+    },
+    {
+      "title": "Setup API Documentation",
+      "description": "Implement Swagger/OpenAPI documentation for all endpoints with proper examples and schemas.",
+      "totalMinutes": 120,
+      "status": "TODO"
+    },
+    {
+      "title": "Add Request Logging",
+      "description": "Implement structured logging for all API requests including user tracking and performance metrics.",
+      "totalMinutes": 90,
+      "status": "TODO"
+    },
+    {
+      "title": "Create Docker Configuration",
+      "description": "Setup Docker containers for the application and database with proper networking and environment variables.",
+      "totalMinutes": 150,
+      "status": "TODO"
+    },
+    {
+      "title": "Implement Task Filtering",
+      "description": "Add advanced filtering options for tasks by status, assignee, date range, and search terms.",
+      "totalMinutes": 180,
+      "status": "TODO"
+    },
+    {
+      "title": "Add Task Time Tracking",
+      "description": "Allow users to log time spent on tasks and generate time reports for better project management.",
+      "totalMinutes": 240,
+      "status": "TODO"
+    },
+    {
+      "title": "Setup Email Notifications",
+      "description": "Implement email notifications for task assignments, updates, and due date reminders.",
+      "totalMinutes": 200,
+      "status": "TODO"
+    },
+    {
+      "title": "Create Dashboard Analytics",
+      "description": "Build analytics dashboard showing task completion rates, user productivity, and project insights.",
+      "totalMinutes": 360,
+      "status": "TODO"
+    },
+    {
+      "title": "Implement File Attachments",
+      "description": "Allow users to attach files to tasks with proper file validation and storage management.",
+      "totalMinutes": 180,
+      "status": "TODO"
+    }
+  ],
   "metadata": {
-    "version": "1.0.0",
-    "description": "Seed data for SprintSync application",
-    "lastUpdated": "2024-01-01",
-    "notes": "Default users for development and testing. All users have password: password123"
+    "version": "2.0.0",
+    "description": "Comprehensive seed data for SprintSync application",
+    "lastUpdated": "2024-01-15",
+    "notes": "Includes demo users and tasks with various statuses for testing. Admin user: admin@sprintsync.com, Regular users password: password123"
   }
 }

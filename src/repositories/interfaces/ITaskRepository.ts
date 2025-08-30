@@ -47,10 +47,17 @@ export interface ITaskRepository {
   findById(id: string): Promise<ITask | null>;
   findByUser(userId: string): Promise<ITask[]>;
   findAll(): Promise<ITask[]>;
-  findAllWithPagination(filters: TaskFilters, pagination: PaginationOptions): Promise<PaginatedTasksResult>;
+  findAllWithPagination(
+    filters: TaskFilters,
+    pagination: PaginationOptions
+  ): Promise<PaginatedTasksResult>;
   update(id: string, taskData: UpdateTaskDto): Promise<ITask | null>;
   delete(id: string): Promise<boolean>;
   searchByText(searchTerm: string): Promise<ITask[]>;
-  assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask | null>;
+  assignTask(
+    taskId: string,
+    assignedTo: string,
+    assignedBy: string
+  ): Promise<ITask | null>;
   unassignTask(taskId: string, userId: string): Promise<ITask | null>;
 }

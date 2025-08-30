@@ -57,7 +57,7 @@ const apiKeySchema = new Schema<ApiKey>(
   },
   {
     versionKey: false,
-  },
+  }
 );
 
 apiKeySchema.index({ key: 1, status: 1 });
@@ -70,5 +70,5 @@ apiKeySchema.pre('findOneAndUpdate', function (next) {
 export const ApiKeyModel = model<ApiKey>(
   DOCUMENT_NAME,
   apiKeySchema,
-  COLLECTION_NAME,
+  COLLECTION_NAME
 );

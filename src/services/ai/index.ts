@@ -21,12 +21,13 @@ export class AIService {
       messages: [
         {
           role: 'system',
-          content: 'You are a helpful assistant that generates clear, concise task descriptions. Return only the task description without any formatting, bullet points, or special characters. Keep it professional and actionable. Include specific steps or requirements if needed.'
+          content:
+            'You are a helpful assistant that generates clear, concise task descriptions. Return only the task description without any formatting, bullet points, or special characters. Keep it professional and actionable. Include specific steps or requirements if needed.',
         },
         {
           role: 'user',
-          content: `Generate a task description for: ${title}`
-        }
+          content: `Generate a task description for: ${title}`,
+        },
       ],
       stream: true,
       max_tokens: 300,

@@ -1,7 +1,11 @@
-node_modules
-build
-dist
-coverage
+build/
+dist/
+node_modules/
+logs/
 *.log
-.env
-.DS_Store
+coverage/
+.nyc_output/
+yarn.lock
+package-lock.json
+swagger-output.json
+scripts/swagger-output.json

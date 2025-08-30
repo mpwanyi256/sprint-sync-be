@@ -30,7 +30,7 @@ export const validateTokenData = (payload: JwtPayload): boolean => {
 export const createTokens = async (
   user: User,
   accessTokenKey: string,
-  refreshTokenKey: string,
+  refreshTokenKey: string
 ): Promise<Tokens> => {
   const accessToken = await JWT.encode(
     new JwtPayload(
@@ -38,8 +38,8 @@ export const createTokens = async (
       tokenInfo.audience,
       user._id.toString(),
       accessTokenKey,
-      Number(tokenInfo.accessTokenValidity),
-    ),
+      Number(tokenInfo.accessTokenValidity)
+    )
   );
 
   if (!accessToken) throw new InternalError();
@@ -50,8 +50,8 @@ export const createTokens = async (
       tokenInfo.audience,
       user._id.toString(),
       refreshTokenKey,
-      Number(tokenInfo.refreshTokenValidity),
-    ),
+      Number(tokenInfo.refreshTokenValidity)
+    )
   );
 
   if (!refreshToken) throw new InternalError();

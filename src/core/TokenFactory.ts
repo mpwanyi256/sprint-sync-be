@@ -20,7 +20,7 @@ export class TokenFactory {
   static createTokenPair(): TokenPair {
     return {
       accessKey: this.createAccessTokenKey(),
-      refreshKey: this.createRefreshTokenKey()
+      refreshKey: this.createRefreshTokenKey(),
     };
   }
 
@@ -28,10 +28,10 @@ export class TokenFactory {
     if (!token || typeof token !== 'string') {
       return false;
     }
-    
+
     const expectedLength = this.TOKEN_LENGTH * 2;
     const hexPattern = /^[a-f0-9]+$/i;
-    
+
     return token.length === expectedLength && hexPattern.test(token);
   }
 }

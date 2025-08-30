@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: sprint-sync-api
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_NAME=sprint-sync
+      - DB_USER=sprintsync
+      - DB_PASSWORD=sprintsync123
+      - DB_MIN_POOL_SIZE=5
+      - DB_MAX_POOL_SIZE=10
+      - JWT_ISSUER=sprint-sync
+      - JWT_AUDIENCE=sprint-sync-users
+      - JWT_ACCESS_TOKEN_VALIDITY=3600
+      - JWT_REFRESH_TOKEN_VALIDITY=86400
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - OPENAI_KEY=${OPENAI_KEY:-}
+      - CORS_URL=http://localhost:3001
+      - LOG_DIR=logs
+    depends_on:
+      - mongodb
+    networks:
+      - sprint-sync-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: sprint-sync-db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=sprintsync
+      - MONGO_INITDB_ROOT_PASSWORD=sprintsync123
+      - MONGO_INITDB_DATABASE=sprint-sync
+    volumes:
+      - mongodb_data:/data/db
+      - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - sprint-sync-network
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: sprint-sync-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=sprintsync
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=sprintsync123
+      - ME_CONFIG_MONGODB_URL=mongodb://sprintsync:sprintsync123@mongodb:27017/
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+    depends_on:
+      - mongodb
+    networks:
+      - sprint-sync-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  sprint-sync-network:
+    driver: bridge

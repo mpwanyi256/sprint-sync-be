@@ -5,6 +5,7 @@ import { aiService } from '../../services/ai';
 const router = express.Router();
 
 router.post('/', async (req, res) => {
+  // #swagger.tags = ['AI']
   try {
     const { title } = req.body;
 
@@ -27,8 +28,7 @@ router.post('/', async (req, res) => {
     }
 
     res.end();
-  } catch (error) {
-    console.error('AI suggestion error:', error);
+  } catch {
     if (!res.headersSent) {
       res.status(500).json({ error: 'Failed to generate task description' });
     } else {

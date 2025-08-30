@@ -1,23 +1,28 @@
 import { UserModel } from '../models/User';
 import { User } from '../types/User';
 import { DatabaseError } from '../core/ApiErrors';
-import { IUserRepository, CreateUserDto, UserFilters, PaginationOptions, PaginatedUsersResult } from './interfaces/IUserRepository';
+import {
+  IUserRepository,
+  CreateUserDto,
+  UserFilters,
+  PaginationOptions,
+  PaginatedUsersResult,
+} from './interfaces/IUserRepository';
 import Logger from '../core/Logger';
 
 export class UserRepository implements IUserRepository {
   async findByEmail(email: string): Promise<User | null> {
     try {
-      const user = await UserModel
-        .findOne({ email })
+      const user = await UserModel.findOne({ email })
         .select('+firstName +lastName +email +password +isAdmin')
         .lean()
         .exec();
-      
+
       if (!user) {
         Logger.debug(`User not found for email: ${email}`);
         return null;
       }
-      
+
       Logger.debug(`User found for email: ${email}`);
       return user as User;
     } catch (error: any) {
@@ -42,17 +47,16 @@ export class UserRepository implements IUserRepository {
 
   async findById(id: string): Promise<User | null> {
     try {
-      const user = await UserModel
-        .findById(id)
+      const user = await UserModel.findById(id)
         .select('+firstName +lastName +email +isAdmin')
         .lean()
         .exec();
-      
+
       if (!user) {
         Logger.debug(`User not found for id: ${id}`);
         return null;
       }
-      
+
       return user as User;
     } catch (error: any) {
       Logger.error('Error finding user by id:', error);
@@ -60,42 +64,46 @@ export class UserRepository implements IUserRepository {
     }
   }
 
-  async getAllUsersWithPagination(filters: UserFilters, pagination: PaginationOptions): Promise<PaginatedUsersResult> {
+  async getAllUsersWithPagination(
+    filters: UserFilters,
+    pagination: PaginationOptions
+  ): Promise<PaginatedUsersResult> {
     try {
       const { page, limit } = pagination;
       const skip = (page - 1) * limit;
-      
+
       // Build filter query
       const filterQuery: any = {};
-      
+
       if (filters.search) {
         filterQuery.$or = [
           { firstName: { $regex: filters.search, $options: 'i' } },
           { lastName: { $regex: filters.search, $options: 'i' } },
-          { email: { $regex: filters.search, $options: 'i' } }
+          { email: { $regex: filters.search, $options: 'i' } },
         ];
       }
-      
+
       if (filters.isAdmin !== undefined) {
         filterQuery.isAdmin = filters.isAdmin;
       }
-      
+
       // Get total count for pagination
       const totalItems = await UserModel.countDocuments(filterQuery);
       const totalPages = Math.ceil(totalItems / limit);
-      
+
       // Get paginated results
-      const users = await UserModel
-        .find(filterQuery)
+      const users = await UserModel.find(filterQuery)
         .select('firstName lastName email isAdmin createdAt updatedAt')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean()
         .exec();
-      
-      Logger.debug(`Found ${users.length} users with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}`);
-      
+
+      Logger.debug(
+        `Found ${users.length} users with filters and pagination. Page ${page}/${totalPages}, Total: ${totalItems}`
+      );
+
       return {
         users: users as User[],
         pagination: {
@@ -104,8 +112,8 @@ export class UserRepository implements IUserRepository {
           totalItems,
           itemsPerPage: limit,
           hasNextPage: page < totalPages,
-          hasPreviousPage: page > 1
-        }
+          hasPreviousPage: page > 1,
+        },
       };
     } catch (error: any) {
       Logger.error('Error finding users with pagination:', error);

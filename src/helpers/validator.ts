@@ -31,7 +31,7 @@ export const JoiAuthBearer = () =>
 
 export default (
     schema: Joi.AnySchema,
-    source: ValidationSource = ValidationSource.BODY,
+    source: ValidationSource = ValidationSource.BODY
   ) =>
   (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -41,11 +41,11 @@ export default (
 
       const { details } = error;
       const message = details
-        .map((i) => i.message.replace(/['"]+/g, ''))
+        .map(i => i.message.replace(/['"]+/g, ''))
         .join(',');
 
       next(new BadRequestError(message));
     } catch (error) {
       next(error);
     }
-};
+  };

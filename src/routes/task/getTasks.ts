@@ -1,11 +1,11 @@
-import { SuccessResponse } from "../../core/ApiResponses";
-import validator, { ValidationSource } from "../../helpers/validator";
-import { taskService } from "../../services/task";
-import { ProtectedRequest } from "../../types/AppRequests";
-import schema from "./schema";
-import asyncHandler from "../../core/AsyncHandler";
-import { Router } from "express";
-import { TaskStatus } from "../../repositories/interfaces/ITaskRepository";
+import { SuccessResponse } from '../../core/ApiResponses';
+import validator, { ValidationSource } from '../../helpers/validator';
+import { taskService } from '../../services/task';
+import { ProtectedRequest } from '../../types/AppRequests';
+import schema from './schema';
+import asyncHandler from '../../core/AsyncHandler';
+import { Router } from 'express';
+import { TaskStatus } from '../../repositories/interfaces/ITaskRepository';
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.get(
   '/',
   validator(schema.getTasks, ValidationSource.QUERY),
   asyncHandler(async (req: ProtectedRequest, res) => {
+    // #swagger.tags = ['Tasks']
     // Extract query parameters for pagination and filtering
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
@@ -22,19 +23,22 @@ router.get(
     const createdBy = req.query.createdBy as string;
     const title = req.query.title as string;
     const description = req.query.description as string;
-    
+
     const filters = {
       status,
       assignee,
       createdBy,
       title,
-      description
+      description,
     };
-    
+
     const pagination = { page, limit };
-    
-    const result = await taskService.getAllTasksWithPagination(filters, pagination);
-    
+
+    const result = await taskService.getAllTasksWithPagination(
+      filters,
+      pagination
+    );
+
     const formattedTasks = result.tasks.map(task => ({
       id: task._id,
       title: task.title,
@@ -44,12 +48,12 @@ router.get(
       createdBy: task.createdBy,
       assignedTo: task.assignee,
       createdAt: task.createdAt,
-      updatedAt: task.updatedAt
+      updatedAt: task.updatedAt,
     }));
 
     new SuccessResponse('Tasks retrieved successfully with pagination', {
       tasks: formattedTasks,
-      pagination: result.pagination
+      pagination: result.pagination,
     }).send(res);
   })
 );
@@ -59,9 +63,10 @@ router.get(
   '/search/',
   validator(schema.searchTasks, ValidationSource.QUERY),
   asyncHandler(async (req: ProtectedRequest, res) => {
+    // #swagger.tags = ['Tasks']
     const keyword = req.query.keyword as string;
     const tasks = await taskService.searchTasks(keyword);
-    
+
     const formattedTasks = tasks.map(task => ({
       id: task._id,
       title: task.title,
@@ -70,13 +75,13 @@ router.get(
       createdBy: task.createdBy,
       assignee: task.assignee,
       createdAt: task.createdAt,
-      updatedAt: task.updatedAt
+      updatedAt: task.updatedAt,
     }));
 
     new SuccessResponse('Task search completed', {
       tasks: formattedTasks,
       count: formattedTasks.length,
-      searchTerm: keyword
+      searchTerm: keyword,
     }).send(res);
   })
 );
@@ -85,9 +90,10 @@ router.get(
 router.get(
   '/:id',
   asyncHandler(async (req: ProtectedRequest, res) => {
+    // #swagger.tags = ['Tasks']
     const { id } = req.params;
     const task = await taskService.getTaskById(id);
-    
+
     const formattedTask = {
       id: task._id,
       title: task.title,
@@ -96,14 +102,13 @@ router.get(
       createdBy: task.createdBy,
       assignee: task.assignee,
       createdAt: task.createdAt,
-      updatedAt: task.updatedAt
+      updatedAt: task.updatedAt,
     };
 
     new SuccessResponse('Task retrieved successfully', {
-      task: formattedTask
+      task: formattedTask,
     }).send(res);
   })
 );
-
 
 export default router;

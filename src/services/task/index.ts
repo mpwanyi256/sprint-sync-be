@@ -1,13 +1,18 @@
 import { ITask } from '../../models/Task';
 import { BadRequestError, NotFoundError } from '../../core/ApiErrors';
 import { TaskRepository } from '../../repositories/TaskRepository';
-import { ITaskRepository, CreateTaskDto, UpdateTaskDto, TaskFilters, PaginationOptions, PaginatedTasksResult } from '../../repositories/interfaces/ITaskRepository';
+import {
+  ITaskRepository,
+  CreateTaskDto,
+  UpdateTaskDto,
+  TaskFilters,
+  PaginationOptions,
+  PaginatedTasksResult,
+} from '../../repositories/interfaces/ITaskRepository';
 import Logger from '../../core/Logger';
 
 export class TaskService {
-  constructor(
-    private taskRepo: ITaskRepository = new TaskRepository()
-  ) {}
+  constructor(private taskRepo: ITaskRepository = new TaskRepository()) {}
 
   async createTask(taskData: CreateTaskDto): Promise<ITask> {
     // Validate task data
@@ -23,15 +28,18 @@ export class TaskService {
       throw new BadRequestError('Task duration must be at least 1 minute');
     }
 
-    if (taskData.totalMinutes > 10080) { // Max 1 week
+    if (taskData.totalMinutes > 10080) {
+      // Max 1 week
       throw new BadRequestError('Task duration cannot exceed 1 week');
     }
 
-    Logger.info(`Creating task: ${taskData.title} for user: ${taskData.createdBy}`);
-    
+    Logger.info(
+      `Creating task: ${taskData.title} for user: ${taskData.createdBy}`
+    );
+
     const task = await this.taskRepo.create(taskData);
     Logger.info(`Task created successfully with ID: ${task._id}`);
-    
+
     return task;
   }
 
@@ -53,31 +61,51 @@ export class TaskService {
     return await this.taskRepo.findAll();
   }
 
-  async getAllTasksWithPagination(filters: TaskFilters, pagination: PaginationOptions): Promise<PaginatedTasksResult> {
+  async getAllTasksWithPagination(
+    filters: TaskFilters,
+    pagination: PaginationOptions
+  ): Promise<PaginatedTasksResult> {
     // Validate pagination parameters
     if (pagination.page < 1) {
       throw new BadRequestError('Page number must be at least 1');
     }
-    
+
     if (pagination.limit < 1 || pagination.limit > 100) {
       throw new BadRequestError('Limit must be between 1 and 100');
     }
-    
+
     // Validate filters
-    if (filters.status && !['TODO', 'IN_PROGRESS', 'DONE'].includes(filters.status)) {
-      throw new BadRequestError('Invalid status filter. Must be one of: TODO, IN_PROGRESS, DONE');
+    if (
+      filters.status &&
+      !['TODO', 'IN_PROGRESS', 'DONE'].includes(filters.status)
+    ) {
+      throw new BadRequestError(
+        'Invalid status filter. Must be one of: TODO, IN_PROGRESS, DONE'
+      );
     }
-    
-    Logger.debug(`Fetching tasks with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`, JSON.stringify(filters));
-    
-    const result = await this.taskRepo.findAllWithPagination(filters, pagination);
-    
-    Logger.debug(`Task service returned ${result.tasks.length} tasks for status: ${filters.status || 'all'}`);
-    
+
+    Logger.debug(
+      `Fetching tasks with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`,
+      JSON.stringify(filters)
+    );
+
+    const result = await this.taskRepo.findAllWithPagination(
+      filters,
+      pagination
+    );
+
+    Logger.debug(
+      `Task service returned ${result.tasks.length} tasks for status: ${filters.status || 'all'}`
+    );
+
     return result;
   }
 
-  async updateTask(id: string, taskData: UpdateTaskDto, userId: string): Promise<ITask> {
+  async updateTask(
+    id: string,
+    taskData: UpdateTaskDto,
+    userId: string
+  ): Promise<ITask> {
     // First check if task exists and user has permission
     const existingTask = await this.taskRepo.findById(id);
     if (!existingTask) {
@@ -89,16 +117,24 @@ export class TaskService {
       throw new BadRequestError('Task title cannot be empty');
     }
 
-    if (taskData.description !== undefined && taskData.description.trim().length === 0) {
+    if (
+      taskData.description !== undefined &&
+      taskData.description.trim().length === 0
+    ) {
       throw new BadRequestError('Task description cannot be empty');
     }
 
-    if (taskData.totalMinutes !== undefined && (taskData.totalMinutes < 1 || taskData.totalMinutes > 10080)) {
-      throw new BadRequestError('Task duration must be between 1 minute and 1 week');
+    if (
+      taskData.totalMinutes !== undefined &&
+      (taskData.totalMinutes < 1 || taskData.totalMinutes > 10080)
+    ) {
+      throw new BadRequestError(
+        'Task duration must be between 1 minute and 1 week'
+      );
     }
 
     Logger.info(`Updating task: ${id} by user: ${userId}`);
-    
+
     const updatedTask = await this.taskRepo.update(id, taskData);
     if (!updatedTask) {
       throw new NotFoundError('Task not found during update');
@@ -121,12 +157,12 @@ export class TaskService {
     }
 
     Logger.info(`Deleting task: ${id} by user: ${userId}`);
-    
+
     const success = await this.taskRepo.delete(id);
     if (success) {
       Logger.info(`Task deleted successfully: ${id}`);
     }
-    
+
     return success;
   }
 
@@ -139,15 +175,27 @@ export class TaskService {
     return await this.taskRepo.searchByText(searchTerm);
   }
 
-  async assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask> {
+  async assignTask(
+    taskId: string,
+    assignedTo: string,
+    assignedBy: string
+  ): Promise<ITask> {
     // Validate inputs
     if (!taskId || !assignedTo || !assignedBy) {
-      throw new BadRequestError('Task ID, assignedTo, and assignedBy are required');
+      throw new BadRequestError(
+        'Task ID, assignedTo, and assignedBy are required'
+      );
     }
 
-    Logger.info(`Assigning task: ${taskId} to user: ${assignedTo} by user: ${assignedBy}`);
-    
-    const assignedTask = await this.taskRepo.assignTask(taskId, assignedTo, assignedBy);
+    Logger.info(
+      `Assigning task: ${taskId} to user: ${assignedTo} by user: ${assignedBy}`
+    );
+
+    const assignedTask = await this.taskRepo.assignTask(
+      taskId,
+      assignedTo,
+      assignedBy
+    );
     if (!assignedTask) {
       throw new NotFoundError('Task not found or assignment failed');
     }
@@ -163,7 +211,7 @@ export class TaskService {
     }
 
     Logger.info(`Unassigning task: ${taskId} by user: ${userId}`);
-    
+
     const unassignedTask = await this.taskRepo.unassignTask(taskId, userId);
     if (!unassignedTask) {
       throw new NotFoundError('Task not found or unassignment failed');

@@ -3,17 +3,21 @@ import authRoutes from './auth';
 import taskRoutes from './task';
 import aiRoutes from './ai';
 import userRoutes from './users';
+import healthRoutes from './health';
 import apiKey from '../middleware/api-key';
 import permission from '../middleware/permission';
 import { Permission } from '../types/AppRequests';
 
 const router = express.Router();
 
-// Setup API middleware
+// Public routes (no authentication required)
+router.use('/health', healthRoutes);
+
+// Setup API middleware for protected routes
 router.use(apiKey);
 router.use(permission(Permission.GENERAL));
 
-// Other routes
+// Protected routes
 router.use('/auth', authRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/ai', aiRoutes);

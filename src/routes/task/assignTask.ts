@@ -1,11 +1,11 @@
-import { BadRequestError, NotFoundError } from "../../core/ApiErrors";
-import { SuccessResponse } from "../../core/ApiResponses";
-import { taskService } from "../../services/task";
-import { ProtectedRequest } from "../../types/AppRequests";
-import asyncHandler from "../../core/AsyncHandler";
-import { Router } from "express";
-import schema from "./schema";
-import validator, { ValidationSource } from "../../helpers/validator";
+import { BadRequestError } from '../../core/ApiErrors';
+import { SuccessResponse } from '../../core/ApiResponses';
+import { taskService } from '../../services/task';
+import { ProtectedRequest } from '../../types/AppRequests';
+import asyncHandler from '../../core/AsyncHandler';
+import { Router } from 'express';
+import schema from './schema';
+import validator, { ValidationSource } from '../../helpers/validator';
 
 const router = Router();
 
@@ -14,6 +14,7 @@ router.post(
   '/:id/assign',
   validator(schema.assignTask, ValidationSource.BODY),
   asyncHandler(async (req: ProtectedRequest, res) => {
+    // #swagger.tags = ['Tasks']
     const { id } = req.params;
     const { assignedTo } = req.body;
     const assignedBy = req.user._id.toString();
@@ -23,7 +24,11 @@ router.post(
       throw new BadRequestError('You are not authorized to assign tasks');
     }
 
-    const assignedTask = await taskService.assignTask(id, assignedTo, assignedBy);
+    const assignedTask = await taskService.assignTask(
+      id,
+      assignedTo,
+      assignedBy
+    );
 
     const formattedTask = {
       id: assignedTask._id,
@@ -34,7 +39,7 @@ router.post(
       createdBy: assignedTask.createdBy,
       assignedTo: assignedTask.assignee,
       createdAt: assignedTask.createdAt,
-      updatedAt: assignedTask.updatedAt
+      updatedAt: assignedTask.updatedAt,
     };
 
     new SuccessResponse('Task assigned successfully', formattedTask).send(res);
@@ -45,6 +50,7 @@ router.post(
 router.delete(
   '/:id/assign',
   asyncHandler(async (req: ProtectedRequest, res) => {
+    // #swagger.tags = ['Tasks']
     const { id } = req.params;
     const userId = req.user._id.toString();
 
@@ -64,10 +70,12 @@ router.delete(
       createdBy: unassignedTask.createdBy,
       assignee: unassignedTask.assignee,
       createdAt: unassignedTask.createdAt,
-      updatedAt: unassignedTask.updatedAt
+      updatedAt: unassignedTask.updatedAt,
     };
 
-    new SuccessResponse('Task unassigned successfully', formattedTask).send(res);
+    new SuccessResponse('Task unassigned successfully', formattedTask).send(
+      res
+    );
   })
 );
 

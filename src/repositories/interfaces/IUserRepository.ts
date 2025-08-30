@@ -33,5 +33,8 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<User | null>;
   create(userData: CreateUserDto): Promise<User>;
   findById(id: string): Promise<User | null>;
-  getAllUsersWithPagination(filters: UserFilters, pagination: PaginationOptions): Promise<PaginatedUsersResult>;
+  getAllUsersWithPagination(
+    filters: UserFilters,
+    pagination: PaginationOptions
+  ): Promise<PaginatedUsersResult>;
 }

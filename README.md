@@ -1,393 +1,515 @@
 # Sprint Sync Backend
 
-A Node.js backend API built with Express, TypeScript, and MongoDB, implementing clean architecture patterns for scalability and maintainability.
+A production-ready Sprint management backend API built with Node.js, Express, TypeScript, and MongoDB. This project provides comprehensive task management capabilities with AI-powered task suggestions, user authentication, and real-time collaboration features.
+
+[![CI/CD Pipeline](https://github.com/your-username/sprint-sync-be/workflows/CI/badge.svg)](https://github.com/your-username/sprint-sync-be/actions)
+[![codecov](https://codecov.io/gh/your-username/sprint-sync-be/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/sprint-sync-be)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Features
 
-- **Authentication System** - JWT-based authentication with refresh tokens
-- **Repository Pattern** - Clean separation of data access and business logic
-- **TypeScript** - Full type safety and modern JavaScript features
-- **MongoDB** - Document database with Mongoose ODM
-- **API Key Authentication** - Secure API access control
-- **Structured Logging** - Winston-based logging with file rotation
-- **Error Handling** - Centralized error handling with custom error classes
-- **Validation** - Request validation using Joi schemas
+### Core Features
 
-## 🏗️ Architecture
+- **User Authentication**: JWT-based authentication with secure token management
+- **Task Management**: Complete CRUD operations for tasks with status tracking
+- **Task Assignment**: Assign tasks to team members with history tracking
+- **AI Integration**: OpenAI-powered task description generation from titles
+- **User Management**: User profiles, roles, and administrative functions
+- **Real-time Health Monitoring**: Comprehensive health check endpoints
 
-This project follows the **Repository Pattern** and **Clean Architecture** principles:
+### Technical Highlights
 
-```
-src/
-├── repositories/           # Data Access Layer
-│   ├── interfaces/         # Repository contracts
-│   ├── UserRepository.ts   # User data operations
-│   └── KeystoreRepository.ts # Keystore operations
-├── services/               # Business Logic Layer
-│   ├── user/              # User business logic
-│   └── apiKey/            # API key management
-├── routes/                 # HTTP Layer
-│   └── auth/              # Authentication endpoints
-├── models/                 # Database Models
-├── core/                   # Core utilities
-│   ├── TokenFactory.ts    # Token generation
-│   ├── ApiErrors.ts       # Error handling
-│   └── Logger.ts          # Logging
-└── helpers/                # Utility functions
-```
+- **Production Ready**: Docker containerization with optimized builds
+- **Auto-generated Documentation**: Swagger/OpenAPI docs generated automatically
+- **Structured Logging**: JSON-formatted logs with request correlation
+- **Type Safety**: Full TypeScript implementation with strict type checking
+- **Quality Assurance**: Pre-commit hooks, linting, and comprehensive testing
+- **CI/CD Pipeline**: GitHub Actions for automated testing and deployment
+- **Security**: API key authentication, input validation, and error handling
 
-## 🛠️ Prerequisites
+## 📋 Prerequisites
 
-- **Node.js** (v18 or higher)
-- **Yarn** package manager
-- **MongoDB** (v6 or higher)
-- **TypeScript** knowledge
+Before you begin, ensure you have the following installed:
 
-## 📦 Installation
+- **Node.js** (v18.x or v20.x)
+- **npm** or **yarn** package manager
+- **MongoDB** (v7.0 or later)
+- **Docker & Docker Compose** (for containerized setup)
+- **Git** (for version control)
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd sprint-sync-be
-   ```
+### Optional Tools
 
-2. **Install dependencies**
-   ```bash
-   yarn install
-   ```
+- **MongoDB Compass** (GUI for MongoDB)
+- **Postman** or **Insomnia** (API testing)
+- **VS Code** (recommended editor with extensions)
 
-3. **Start MongoDB**
-   ```bash
-   # On macOS with Homebrew
-   brew services start mongodb-community
-   
-   # Or start manually
-   mongod --dbpath /usr/local/var/mongodb
-   ```
+## 🛠️ Installation & Setup
 
-4. **Environment Setup**
-   Create a `.env` file in the root directory:
-   ```env
-   NODE_ENV=development
-   PORT=8020
-   CORS_URL=http://localhost:3000
-   DB_NAME=sprint-sync
-   DB_MIN_POOL_SIZE=2
-   DB_MAX_POOL_SIZE=5
-   LOG_DIR=logs
-   JWT_ISSUER=sprint-sync
-   JWT_AUDIENCE=sprint-sync
-   JWT_ACCESS_TOKEN_VALIDITY=1h
-   JWT_REFRESH_TOKEN_VALIDITY=7d
-   ```
+### Option 1: Docker Setup (Recommended)
 
-## 🚀 Development
+This is the fastest way to get the project running with all dependencies.
 
-### Start Development Server
+#### 1. Clone the Repository
+
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/sprint-sync-be.git
+cd sprint-sync-be
+
+# Install dependencies
+yarn install
+```
+
+#### 2. Environment Setup
+
+```bash
+# Copy environment template
+cp env.example .env
+
+# Edit the environment variables
+nano .env  # or use your preferred editor
+```
+
+#### 3. Generate RSA Keys
+
+You need RSA keys for JWT token signing. Choose one method:
+
+**Option A: Use Online Tool**
+
+1. Visit [RSA Key Generator](https://cryptotools.net/rsagen) or [RSA Key Pair Generator](https://www.allkeysgenerator.com/Random/RSA-key-Pair-Generator.aspx)
+2. Generate 2048-bit RSA keys
+3. Save private key as `keys/private.pem`
+4. Save public key as `keys/public.pem`
+
+**Option B: Use OpenSSL (if available)**
+
+```bash
+# Generate private key
+openssl genrsa -out keys/private.pem 2048
+
+# Generate public key
+openssl rsa -in keys/private.pem -pubout -out keys/public.pem
+```
+
+**Option C: Copy Example Keys (Development Only)**
+
+```bash
+# For development/testing only - NOT for production
+cp keys/private.pem.example keys/private.pem
+cp keys/public.pem.example keys/public.pem
+```
+
+#### 4. Start with Docker Compose
+
+```bash
+# Start all services (app + database)
+docker-compose up --build
+
+# Or run in background
+docker-compose up -d --build
+```
+
+#### 5. Seed the Database
+
+```bash
+# Seed both users and tasks
+yarn seed:data
+
+# Or seed individually
+yarn seed:users
+yarn seed:tasks
+```
+
+#### 6. Verify Setup
+
+- API: http://localhost:3000/api/health
+- Documentation: http://localhost:3000/api-docs
+- MongoDB: localhost:27017 (if running locally)
+
+### Option 2: Manual Setup
+
+For local development without Docker.
+
+#### 1. Setup MongoDB
+
+**Option A: Local Installation**
+
+```bash
+# macOS with Homebrew
+brew tap mongodb/brew
+brew install mongodb-community@7.0
+brew services start mongodb-community@7.0
+
+# Ubuntu/Debian
+sudo apt-get install mongodb-org
+sudo systemctl start mongod
+
+# Windows
+# Download from: https://www.mongodb.com/try/download/community
+```
+
+**Option B: MongoDB Atlas (Cloud)**
+
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create cluster and get connection string
+3. Update `DB_URI` in `.env` file
+
+#### 2. Clone and Install
+
+```bash
+git clone https://github.com/your-username/sprint-sync-be.git
+cd sprint-sync-be
+yarn install
+```
+
+#### 3. Environment Configuration
+
+```bash
+cp env.example .env
+```
+
+Update `.env` with your settings:
+
+```env
+# Database
+DB_URI=mongodb://localhost:27017/sprint-sync
+DB_NAME=sprint-sync
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key
+JWT_ISSUER=sprint-sync-api
+JWT_AUDIENCE=sprint-sync-app
+JWT_ACCESS_TOKEN_VALIDITY=3600
+JWT_REFRESH_TOKEN_VALIDITY=86400
+
+# OpenAI (for AI features)
+OPENAI_KEY=your-openai-api-key
+
+# Server
+PORT=3000
+NODE_ENV=development
+
+# CORS
+CORS_URL=*
+```
+
+#### 4. Generate RSA Keys
+
+Follow the same RSA key generation steps from Docker setup above.
+
+#### 5. Start Development Server
+
+```bash
+# Generate documentation and start server
 yarn dev
+
+# Or with file watching
+yarn dev:watch
 ```
 
-The server will start on port 8020 (or the port specified in your `.env` file).
+#### 6. Database Seeding
 
-### Build for Production
 ```bash
-yarn build
+# Seed the database with demo data
+yarn seed:data
+
+# Check database
+mongo sprint-sync
+db.users.find()
+db.tasks.find()
 ```
 
-### Run Tests
-```bash
-yarn test
-```
+## 🎯 Request-Response Flow
 
-## 🏗️ Repository Pattern Implementation
-
-### Why Repository Pattern?
-
-The Repository Pattern provides several benefits:
-- **Separation of Concerns** - Business logic is separate from data access
-- **Testability** - Easy to mock repositories for unit testing
-- **Consistency** - All database operations follow the same patterns
-- **Maintainability** - Database changes only affect repository layer
-- **Flexibility** - Easy to add caching, logging, or switch databases
-
-### Repository Structure
-
-#### 1. Interface Definition
-```typescript
-// repositories/interfaces/IUserRepository.ts
-export interface IUserRepository {
-  findByEmail(email: string): Promise<User | null>;
-  create(userData: CreateUserDto): Promise<User>;
-  findById(id: string): Promise<User | null>;
-}
-```
-
-#### 2. Implementation
-```typescript
-// repositories/UserRepository.ts
-export class UserRepository implements IUserRepository {
-  async findByEmail(email: string): Promise<User | null> {
-    try {
-      const user = await UserModel
-        .findOne({ email })
-        .select('+firstName +lastName +email +password +isAdmin')
-        .lean()
-        .exec();
-      
-      return user as User;
-    } catch (error: any) {
-      Logger.error('Error finding user by email:', error);
-      throw new DatabaseError('Failed to find user by email', error);
-    }
-  }
-}
-```
-
-#### 3. Service Layer
-```typescript
-// services/user/index.ts
-export class UserService {
-  constructor(
-    private userRepo: IUserRepository = new UserRepository(),
-    private keystoreRepo: IKeystoreRepository = new KeystoreRepository()
-  ) {}
-
-  async authenticateUser(email: string, password: string): Promise<User> {
-    const user = await this.userRepo.findByEmail(email);
-    if (!user) throw new BadRequestError('User not found');
-    
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) throw new BadRequestError('Invalid password');
-    
-    return user;
-  }
-}
-```
-
-### Token Factory Pattern
-
-Centralized token generation eliminates code duplication:
-
-```typescript
-// core/TokenFactory.ts
-export class TokenFactory {
-  static createTokenPair(): TokenPair {
-    return {
-      accessKey: this.createAccessTokenKey(),
-      refreshKey: this.createRefreshTokenKey()
-    };
-  }
-}
-```
-
-## 🔐 Authentication Flow
-
-### 1. User Registration
-```
-POST /api/auth/signup
-{
-  "firstName": "John",
-  "lastName": "Doe", 
-  "email": "john@example.com",
-  "password": "securepassword"
-}
-```
-
-### 2. User Login
-```
-POST /api/auth/signin
-{
-  "email": "john@example.com",
-  "password": "securepassword"
-}
-```
-
-### 3. API Key Authentication
-All API requests require an `x-api-key` header:
-```
-x-api-key: your-api-key-here
-```
-
-## 📊 Database Models
-
-### User Model
-```typescript
-{
-  firstName: String (required),
-  lastName: String (required),
-  email: String (required, unique),
-  password: String (required, select: false),
-  isAdmin: Boolean (default: false),
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-### Keystore Model
-```typescript
-{
-  client: ObjectId (ref: User),
-  primaryKey: String (access token),
-  secondaryKey: String (refresh token),
-  status: Boolean (default: true),
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-## 🧪 Testing
-
-### Unit Testing
-```bash
-# Run all tests
-yarn test
-
-# Run tests with coverage
-yarn test:coverage
-
-# Run specific test file
-yarn test src/services/user/index.test.ts
-```
-
-### Testing with Repositories
-The Repository Pattern makes testing easy:
-
-```typescript
-// Mock repository for testing
-const mockUserRepo: IUserRepository = {
-  findByEmail: jest.fn().mockResolvedValue(mockUser),
-  create: jest.fn().mockResolvedValue(mockUser),
-  findById: jest.fn().mockResolvedValue(mockUser)
-};
-
-// Inject mock into service
-const userService = new UserService(mockUserRepo, mockKeystoreRepo);
-```
-
-## 🔧 Configuration
-
-### Database Configuration
-- **MongoDB URI**: `mongodb://localhost:27017/sprint-sync`
-- **Connection Pool**: Min 2, Max 5 connections
-- **Timeout**: 30 seconds connection timeout
-
-### Logging Configuration
-- **Development**: Console + File logging
-- **Production**: File logging only
-- **Rotation**: Daily log files with 14-day retention
-- **Max Size**: 20MB per log file
-
-## 🚀 Deployment
-
-### Docker
-```bash
-# Build image
-docker build -t sprint-sync-be .
-
-# Run container
-docker run -p 8020:8020 sprint-sync-be
-```
-
-### Environment Variables
-Set these in production:
-- `NODE_ENV=production`
-- `PORT=8020`
-- `DB_URI=mongodb://your-production-db`
-- `CORS_URL=https://your-frontend-domain.com`
-
-## 📁 Project Structure
+Understanding the API request-response flow helps in debugging and extending the application.
 
 ```
-sprint-sync-be/
-├── src/
-│   ├── repositories/          # Data access layer
-│   │   ├── interfaces/        # Repository contracts
-│   │   ├── UserRepository.ts  # User data operations
-│   │   └── KeystoreRepository.ts
-│   ├── services/              # Business logic
-│   │   ├── user/             # User operations
-│   │   └── apiKey/           # API key management
-│   ├── routes/                # HTTP endpoints
-│   │   └── auth/             # Authentication routes
-│   ├── models/                # Database schemas
-│   ├── core/                  # Core utilities
-│   │   ├── TokenFactory.ts   # Token generation
-│   │   ├── ApiErrors.ts      # Error handling
-│   │   └── Logger.ts         # Logging
-│   ├── helpers/               # Utility functions
-│   ├── database/              # Database connection
-│   ├── app.ts                 # Express app setup
-│   └── server.ts              # Server entry point
-├── tests/                     # Test files
-├── logs/                      # Application logs
-├── package.json               # Dependencies
-├── tsconfig.json              # TypeScript config
-└── README.md                  # This file
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Client App    │    │   Sprint Sync    │    │    Database     │
+│  (Frontend/     │    │      API         │    │   (MongoDB)     │
+│   Mobile)       │    │                  │    │                 │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+         │                       │                       │
+         │  1. HTTP Request      │                       │
+         │ (+ API Key/JWT)       │                       │
+         │──────────────────────>│                       │
+         │                       │                       │
+         │                       │  2. Middleware        │
+         │                       │     Processing        │
+         │                       │  - Request Logging    │
+         │                       │  - API Key Validation │
+         │                       │  - JWT Authentication │
+         │                       │  - Permission Check   │
+         │                       │                       │
+         │                       │  3. Route Handler     │
+         │                       │     Execution         │
+         │                       │                       │
+         │                       │  4. Database Query    │
+         │                       │──────────────────────>│
+         │                       │                       │
+         │                       │  5. Database Response │
+         │                       │<──────────────────────│
+         │                       │                       │
+         │                       │  6. Response          │
+         │                       │     Formatting        │
+         │                       │  - Success/Error      │
+         │                       │  - Data Serialization │
+         │                       │  - Response Logging   │
+         │                       │                       │
+         │  7. JSON Response     │                       │
+         │<──────────────────────│                       │
+         │                       │                       │
 ```
 
-## 🤝 Contributing
+### Request Flow Details
 
-1. **Follow the Repository Pattern** - Keep data access in repositories
-2. **Use TypeScript** - Maintain type safety
-3. **Add Tests** - New features should include tests
-4. **Follow Error Handling** - Use custom error classes
-5. **Logging** - Add appropriate logging at repository and service layers
+1. **Client Request**: Includes API key and/or JWT token
+2. **Middleware Chain**:
+   - Request logging with correlation ID
+   - API key validation (`x-api-key` header)
+   - JWT token verification (Bearer token)
+   - Permission-based access control
+3. **Route Processing**: Business logic execution
+4. **Database Operations**: MongoDB queries via Mongoose
+5. **Response Generation**: Standardized JSON responses
+6. **Error Handling**: Centralized error logging and response
 
-## 📝 API Documentation
+### Authentication Levels
 
-### Authentication Endpoints
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/signup` | User registration | No |
-| POST | `/api/auth/signin` | User login | No |
-
-### Request Headers
 ```
-x-api-key: your-api-key
-Content-Type: application/json
+Public Routes:
+├── /api/health (Health check)
+└── /api-docs (API documentation)
+
+API Key Required:
+├── /api/auth/signup (User registration)
+├── /api/auth/signin (User login)
+└── /api/auth/logout (User logout)
+
+JWT Required (All other routes):
+├── /api/tasks/* (Task management)
+├── /api/users/* (User management)
+└── /api/ai/* (AI assistance)
 ```
 
-### Response Format
+## 🗃️ Database Seeding
+
+The project includes comprehensive seed data for development and testing.
+
+### Seed Data Structure
+
 ```json
 {
-  "statusCode": "10000",
-  "message": "Success message",
-  "data": {
-    "user": { ... },
-    "tokens": { ... }
-  }
+  "users": [
+    {
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@sprintsync.com",
+      "password": "password123",
+      "isAdmin": true
+    }
+    // ... 10 more regular users
+  ],
+  "tasks": [
+    {
+      "title": "Setup Project Infrastructure",
+      "description": "Initialize the project with proper folder structure...",
+      "totalMinutes": 240,
+      "status": "DONE"
+    }
+    // ... 15 more tasks with different statuses
+  ]
 }
 ```
 
-## 🐛 Troubleshooting
+### Seeding Commands
 
-### Common Issues
+```bash
+# Seed everything (recommended)
+yarn seed:data
 
-1. **MongoDB Connection Failed**
-   - Ensure MongoDB is running: `brew services list | grep mongodb`
-   - Check connection string in logs
+# Seed only users
+yarn seed:users
 
-2. **Module Resolution Errors**
-   - All imports use relative paths (no `@/` imports)
-   - Check file paths and import statements
+# Seed only tasks (requires users to exist)
+yarn seed:tasks
+```
 
-3. **Port Already in Use**
-   - Change PORT in `.env` file
-   - Kill existing process: `lsof -ti:8020 | xargs kill`
+### Default Users
 
-4. **TypeScript Compilation Errors**
-   - Run `yarn build` to see detailed errors
-   - Check import paths and type definitions
+| Email                     | Password    | Role  | Purpose                 |
+| ------------------------- | ----------- | ----- | ----------------------- |
+| admin@sprintsync.com      | password123 | Admin | Administrative tasks    |
+| john.smith@company.com    | password123 | User  | Regular user testing    |
+| sarah.johnson@company.com | password123 | User  | Task assignment testing |
 
-## 📚 Additional Resources
+## 🔧 Development Workflow
 
-- [Repository Pattern](https://martinfowler.com/eaaCatalog/repository.html)
-- [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-- [Mongoose Documentation](https://mongoosejs.com/docs/)
+### Git Workflow & Commit Standards
 
-## 📄 License
+This project uses conventional commits and pre-commit hooks for code quality.
 
-This project is licensed under the MIT License.
+#### Commit Message Format
+
+```
+type(scope): subject
+
+body
+
+footer
+```
+
+**Types:**
+
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `chore`: Maintenance tasks
+- `ci`: CI/CD changes
+
+**Examples:**
+
+```bash
+git commit -m "feat(auth): add JWT token refresh functionality"
+git commit -m "fix(tasks): resolve task assignment validation issue"
+git commit -m "docs(readme): update installation instructions"
+```
+
+#### Pre-commit Hooks
+
+The project automatically runs these checks before each commit:
+
+1. **ESLint**: Code quality and style checking
+2. **Prettier**: Code formatting
+3. **TypeScript**: Type checking
+4. **Commit Message**: Conventional commit format validation
+
+```bash
+# These run automatically on commit
+yarn lint      # ESLint check
+yarn format    # Prettier formatting
+yarn check     # TypeScript validation
+```
+
+#### Branch Naming Convention
+
+```
+feature/feature-name    # New features
+bugfix/bug-description  # Bug fixes
+hotfix/urgent-fix      # Critical fixes
+docs/documentation     # Documentation updates
+chore/maintenance      # Maintenance tasks
+```
+
+**Examples:**
+
+```bash
+git checkout -b feature/task-filtering
+git checkout -b bugfix/auth-token-expiry
+git checkout -b docs/api-documentation
+```
+
+### Development Commands
+
+```bash
+# Development
+yarn dev                    # Start development server
+yarn dev:watch              # Start with file watching
+yarn build                  # Build for production
+yarn start                  # Start production server
+
+# Documentation
+yarn swagger                # Generate API documentation
+
+# Code Quality
+yarn lint                   # Run ESLint
+yarn lint --fix             # Fix ESLint issues
+yarn format                 # Format code with Prettier
+yarn check                  # TypeScript type checking
+
+# Testing
+yarn test                   # Run tests
+yarn test:watch             # Run tests in watch mode
+yarn test:coverage          # Run tests with coverage
+
+# Database
+yarn seed:data              # Seed complete database
+yarn seed:users             # Seed only users
+yarn seed:tasks             # Seed only tasks
+```
+
+## 📚 API Documentation
+
+### Interactive Documentation
+
+- **Swagger UI**: http://localhost:3000/api-docs
+- **Auto-generated**: Updates automatically with code changes
+- **Interactive Testing**: Test endpoints directly from the browser
+
+### Key Endpoints
+
+#### Authentication
+
+```
+POST /api/auth/signup       # User registration
+POST /api/auth/signin       # User login
+POST /api/auth/logout       # User logout
+```
+
+#### Tasks
+
+```
+GET    /api/tasks           # Get all tasks (with pagination)
+POST   /api/tasks           # Create new task
+GET    /api/tasks/:id       # Get task by ID
+PUT    /api/tasks/:id       # Update task
+DELETE /api/tasks/:id       # Delete task
+POST   /api/tasks/:id/assign   # Assign task to user
+DELETE /api/tasks/:id/assign   # Unassign task
+```
+
+#### Users
+
+```
+GET    /api/users           # Get all users (with pagination)
+GET    /api/users/:id       # Get user by ID
+```
+
+#### AI Assistance
+
+```
+POST   /api/ai/suggest      # Generate task description from title
+```
+
+#### Health & Monitoring
+
+```
+GET    /api/health          # Health check with system info
+```
+
+## 📖 Additional Resources
+
+### Learning Resources
+
+These resources were instrumental in building this project:
+
+#### Architecture & Design Patterns
+
+- [Node.js Best Practices](https://github.com/goldbergyoni/nodebestpractices) - Comprehensive Node.js guidelines
+- [Clean Architecture in Node.js](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html) - Architectural principles
+- [Express.js Production Best Practices](https://expressjs.com/en/advanced/best-practice-performance.html) - Express optimization
+
+#### Authentication & Security
+
+- [JWT Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/) - JSON Web Token guidelines
+- [Node.js Security Checklist](https://blog.risingstack.com/node-js-security-checklist/) - Security best practices
+- [OWASP API Security](https://owasp.org/www-project-api-security/) - API security guidelines
+
+#### Database & MongoDB
+
+- [MongoDB Schema Design](https://www.mongodb.com/developer/products/mongodb/mongodb-schema-design-best-practices/) - Schema best practices
+- [Mongoose Guide](https://mongoosejs.com/docs/guide.html) - ODM documentation

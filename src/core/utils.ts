@@ -1,4 +1,4 @@
 export const enum Header {
-    API_KEY = 'x-api-key',
-    AUTHORIZATION = 'authorization',
+  API_KEY = 'x-api-key',
+  AUTHORIZATION = 'authorization',
 }

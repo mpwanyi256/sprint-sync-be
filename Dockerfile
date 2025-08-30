@@ -1,23 +1,38 @@
-# Here we are getting our node as Base image
-FROM node:20.10.0
+# Use Node.js LTS version
+FROM node:20-alpine
 
-# create user in the docker image
-USER node
+# Set working directory
+WORKDIR /app
 
-# Creating a new directory for app files and setting path in the container
-RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
+# Copy package files
+COPY package.json yarn.lock ./
 
-# setting working directory in the container
-WORKDIR /home/node/app
+# Install dependencies
+RUN yarn install --frozen-lockfile --production=false
 
-# grant permission of node project directory to node user
-COPY --chown=node:node . .
+# Copy source code
+COPY . .
 
-# installing the dependencies into the container
-RUN npm install
+# Build the application
+RUN yarn build
 
-# container exposed network port number
+# Remove development dependencies
+RUN yarn install --frozen-lockfile --production=true && yarn cache clean
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+
+# Change ownership of the app directory
+RUN chown -R nextjs:nodejs /app
+USER nextjs
+
+# Expose port
 EXPOSE 3000
 
-# command to run within the container
-CMD [ "npm", "start" ]
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
+
+# Start the application
+CMD ["yarn", "start"]

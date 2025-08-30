@@ -21,5 +21,5 @@ export default router.use(
 
     req.apiKey = apiKey;
     return next();
-  }),
+  })
 );

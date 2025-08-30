@@ -21,13 +21,13 @@ abstract class ApiResponse {
   constructor(
     protected statusCode: StatusCode,
     protected status: ResponseStatus,
-    protected message: string,
+    protected message: string
   ) {}
 
   protected prepare<T extends ApiResponse>(
     res: Response,
     response: T,
-    headers: { [key: string]: string },
+    headers: { [key: string]: string }
   ): Response {
     for (const [key, value] of Object.entries(headers)) res.append(key, value);
     return res.status(this.status).json(ApiResponse.sanitize(response));
@@ -35,7 +35,7 @@ abstract class ApiResponse {
 
   public send(
     res: Response,
-    headers: { [key: string]: string } = {},
+    headers: { [key: string]: string } = {}
   ): Response {
     return this.prepare<ApiResponse>(res, this, headers);
   }
@@ -97,7 +97,10 @@ export class FailureMsgResponse extends ApiResponse {
 }
 
 export class SuccessResponse<T> extends ApiResponse {
-  constructor(message: string, private data: T) {
+  constructor(
+    message: string,
+    private data: T
+  ) {
     super(StatusCode.SUCCESS, ResponseStatus.SUCCESS, message);
   }
 
@@ -113,7 +116,7 @@ export class AccessTokenErrorResponse extends ApiResponse {
     super(
       StatusCode.INVALID_ACCESS_TOKEN,
       ResponseStatus.UNAUTHORIZED,
-      message,
+      message
     );
   }
 
@@ -127,7 +130,7 @@ export class TokenRefreshResponse extends ApiResponse {
   constructor(
     message: string,
     private accessToken: string,
-    private refreshToken: string,
+    private refreshToken: string
   ) {
     super(StatusCode.SUCCESS, ResponseStatus.SUCCESS, message);
   }
