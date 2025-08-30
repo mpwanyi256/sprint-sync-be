@@ -31,7 +31,7 @@ A production-ready Sprint management backend API built with Node.js, Express, Ty
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js** (v18.x or v20.x)
+- **Node.js** (v20.x or v22.x)
 - **npm** or **yarn** package manager
 - **MongoDB** (v7.0 or later)
 - **Docker & Docker Compose** (for containerized setup)
@@ -55,6 +55,9 @@ This is the fastest way to get the project running with all dependencies.
 # Clone the repository
 git clone https://github.com/your-username/sprint-sync-be.git
 cd sprint-sync-be
+
+# Switch to required Node.js version (if using nvm)
+nvm use
 
 # Install dependencies
 yarn install
@@ -159,6 +162,10 @@ sudo systemctl start mongod
 ```bash
 git clone https://github.com/your-username/sprint-sync-be.git
 cd sprint-sync-be
+
+# Switch to required Node.js version (if using nvm)
+nvm use
+
 yarn install
 ```
 
