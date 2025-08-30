@@ -38,7 +38,7 @@ export class TaskRepository implements ITaskRepository {
       const latestAssignment = await TaskAssignmentModel
         .findOne({ task: task._id })
         .sort({ updatedAt: -1 })
-        .populate('assignedTo', 'firstName lastName email')
+        .populate('assignedTo', '_id firstName lastName email')
         .lean()
         .exec();
       
@@ -291,6 +291,63 @@ export class TaskRepository implements ITaskRepository {
     } catch (error: any) {
       Logger.error('Error searching tasks by text:', error);
       throw new DatabaseError('Failed to search tasks by text', error);
+    }
+  }
+
+  async assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask | null> {
+    try {
+      // First check if task exists
+      const task = await TaskModel.findById(taskId).lean().exec();
+      if (!task) {
+        Logger.debug(`Task not found for assignment with id: ${taskId}`);
+        return null;
+      }
+
+      // Create or update task assignment
+      const assignmentData = {
+        task: taskId,
+        assignedTo,
+        assignedBy,
+        updatedAt: new Date()
+      };
+
+      await TaskAssignmentModel.findOneAndUpdate(
+        { task: taskId },
+        assignmentData,
+        { upsert: true, new: true, runValidators: true }
+      );
+
+      Logger.info(`Task assignment created/updated: ${taskId} -> ${assignedTo}`);
+
+      // Return the task with updated assignee information
+      const taskWithAssignee = await this.findById(taskId);
+      return taskWithAssignee;
+    } catch (error: any) {
+      Logger.error('Error assigning task:', error);
+      throw new DatabaseError('Failed to assign task', error);
+    }
+  }
+
+  async unassignTask(taskId: string, userId: string): Promise<ITask | null> {
+    try {
+      // First check if task exists
+      const task = await TaskModel.findById(taskId).lean().exec();
+      if (!task) {
+        Logger.debug(`Task not found for unassignment with id: ${taskId}`);
+        return null;
+      }
+
+      // Remove task assignment
+      await TaskAssignmentModel.findOneAndDelete({ task: taskId });
+
+      Logger.info(`Task assignment removed: ${taskId}`);
+
+      // Return the task with updated assignee information
+      const taskWithAssignee = await this.findById(taskId);
+      return taskWithAssignee;
+    } catch (error: any) {
+      Logger.error('Error unassigning task:', error);
+      throw new DatabaseError('Failed to unassign task', error);
     }
   }
 }

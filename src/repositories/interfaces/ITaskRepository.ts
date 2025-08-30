@@ -51,4 +51,6 @@ export interface ITaskRepository {
   update(id: string, taskData: UpdateTaskDto): Promise<ITask | null>;
   delete(id: string): Promise<boolean>;
   searchByText(searchTerm: string): Promise<ITask[]>;
+  assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask | null>;
+  unassignTask(taskId: string, userId: string): Promise<ITask | null>;
 }

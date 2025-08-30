@@ -2,7 +2,7 @@ import { User } from "../../types/User";
 import { BadRequestError } from "../../core/ApiErrors";
 import { UserRepository } from "../../repositories/UserRepository";
 import { KeystoreRepository } from "../../repositories/KeystoreRepository";
-import { IUserRepository, CreateUserDto } from "../../repositories/interfaces/IUserRepository";
+import { IUserRepository, CreateUserDto, UserFilters, PaginationOptions, PaginatedUsersResult } from "../../repositories/interfaces/IUserRepository";
 import { IKeystoreRepository } from "../../repositories/interfaces/IKeystoreRepository";
 import bcrypt from 'bcrypt';
 import Logger from '../../core/Logger';
@@ -52,6 +52,33 @@ export class UserService {
 
     async findUserById(id: string): Promise<User | null> {
         return await this.userRepo.findById(id);
+    }
+
+    async getUserById(id: string): Promise<User> {
+        const user = await this.userRepo.findById(id);
+        if (!user) {
+            throw new BadRequestError('User not found');
+        }
+        return user;
+    }
+
+    async getAllUsersWithPagination(filters: UserFilters, pagination: PaginationOptions): Promise<PaginatedUsersResult> {
+        // Validate pagination parameters
+        if (pagination.page < 1) {
+            throw new BadRequestError('Page number must be at least 1');
+        }
+        
+        if (pagination.limit < 1 || pagination.limit > 100) {
+            throw new BadRequestError('Limit must be between 1 and 100');
+        }
+        
+        Logger.debug(`Fetching users with pagination. Page: ${pagination.page}, Limit: ${pagination.limit}, Filters:`, JSON.stringify(filters));
+        
+        const result = await this.userRepo.getAllUsersWithPagination(filters, pagination);
+        
+        Logger.debug(`User service returned ${result.users.length} users`);
+        
+        return result;
     }
 }
 

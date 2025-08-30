@@ -21,4 +21,7 @@ export default {
         totalMinutes: Joi.number().optional(),
         status: Joi.string().optional(),
     }),
+    assignTask: Joi.object().keys({
+        assignedTo: Joi.string().required(),
+    }),
 };

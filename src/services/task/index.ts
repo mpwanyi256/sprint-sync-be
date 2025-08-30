@@ -138,6 +138,40 @@ export class TaskService {
     Logger.debug(`Searching tasks with term: ${searchTerm}`);
     return await this.taskRepo.searchByText(searchTerm);
   }
+
+  async assignTask(taskId: string, assignedTo: string, assignedBy: string): Promise<ITask> {
+    // Validate inputs
+    if (!taskId || !assignedTo || !assignedBy) {
+      throw new BadRequestError('Task ID, assignedTo, and assignedBy are required');
+    }
+
+    Logger.info(`Assigning task: ${taskId} to user: ${assignedTo} by user: ${assignedBy}`);
+    
+    const assignedTask = await this.taskRepo.assignTask(taskId, assignedTo, assignedBy);
+    if (!assignedTask) {
+      throw new NotFoundError('Task not found or assignment failed');
+    }
+
+    Logger.info(`Task assigned successfully: ${assignedTask.title}`);
+    return assignedTask;
+  }
+
+  async unassignTask(taskId: string, userId: string): Promise<ITask> {
+    // Validate inputs
+    if (!taskId || !userId) {
+      throw new BadRequestError('Task ID and user ID are required');
+    }
+
+    Logger.info(`Unassigning task: ${taskId} by user: ${userId}`);
+    
+    const unassignedTask = await this.taskRepo.unassignTask(taskId, userId);
+    if (!unassignedTask) {
+      throw new NotFoundError('Task not found or unassignment failed');
+    }
+
+    Logger.info(`Task unassigned successfully: ${unassignedTask.title}`);
+    return unassignedTask;
+  }
 }
 
 // Export service instance for backward compatibility
