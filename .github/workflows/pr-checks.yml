@@ -31,7 +31,7 @@ jobs:
       run: yarn format --check
       
     - name: Check commit message format
-      uses: wagoid/commitlint-github-action@v5
+      uses: wagoid/commitlint-github-action@v6
       
     - name: Build application
       run: yarn build
