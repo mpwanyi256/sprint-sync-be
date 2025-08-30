@@ -18,6 +18,11 @@ router.post(
     const { assignedTo } = req.body;
     const assignedBy = req.user._id.toString();
 
+    // check if user is an admin
+    if (!req.user.isAdmin) {
+      throw new BadRequestError('You are not authorized to assign tasks');
+    }
+
     const assignedTask = await taskService.assignTask(id, assignedTo, assignedBy);
 
     const formattedTask = {
@@ -42,6 +47,11 @@ router.delete(
   asyncHandler(async (req: ProtectedRequest, res) => {
     const { id } = req.params;
     const userId = req.user._id.toString();
+
+    // check if user is an admin
+    if (!req.user.isAdmin) {
+      throw new BadRequestError('You are not authorized to unassign tasks');
+    }
 
     const unassignedTask = await taskService.unassignTask(id, userId);
 

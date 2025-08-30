@@ -24,4 +24,7 @@ export default {
     assignTask: Joi.object().keys({
         assignedTo: Joi.string().required(),
     }),
+    searchTasks: Joi.object().keys({
+        keyword: Joi.string().required(),
+    }),
 };

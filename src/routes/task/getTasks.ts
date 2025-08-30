@@ -54,6 +54,33 @@ router.get(
   })
 );
 
+// Search tasks by text
+router.get(
+  '/search/',
+  validator(schema.searchTasks, ValidationSource.QUERY),
+  asyncHandler(async (req: ProtectedRequest, res) => {
+    const keyword = req.query.keyword as string;
+    const tasks = await taskService.searchTasks(keyword);
+    
+    const formattedTasks = tasks.map(task => ({
+      id: task._id,
+      title: task.title,
+      description: task.description,
+      totalMinutes: task.totalMinutes,
+      createdBy: task.createdBy,
+      assignee: task.assignee,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt
+    }));
+
+    new SuccessResponse('Task search completed', {
+      tasks: formattedTasks,
+      count: formattedTasks.length,
+      searchTerm: keyword
+    }).send(res);
+  })
+);
+
 // Get task by ID
 router.get(
   '/:id',
@@ -78,30 +105,5 @@ router.get(
   })
 );
 
-// Search tasks by text
-router.get(
-  '/search/:term',
-  asyncHandler(async (req: ProtectedRequest, res) => {
-    const { term } = req.params;
-    const tasks = await taskService.searchTasks(term);
-    
-    const formattedTasks = tasks.map(task => ({
-      id: task._id,
-      title: task.title,
-      description: task.description,
-      totalMinutes: task.totalMinutes,
-      createdBy: task.createdBy,
-      assignee: task.assignee,
-      createdAt: task.createdAt,
-      updatedAt: task.updatedAt
-    }));
-
-    new SuccessResponse('Task search completed', {
-      tasks: formattedTasks,
-      count: formattedTasks.length,
-      searchTerm: term
-    }).send(res);
-  })
-);
 
 export default router;

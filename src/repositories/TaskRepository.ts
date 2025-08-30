@@ -266,6 +266,7 @@ export class TaskRepository implements ITaskRepository {
         )
         .populate('createdBy', 'firstName lastName email')
         .sort({ score: { $meta: 'textScore' } })
+        .limit(10)
         .lean()
         .exec();
       
