@@ -3,6 +3,7 @@ import { readFile } from 'fs';
 import { promisify } from 'util';
 import { sign, verify } from 'jsonwebtoken';
 import { InternalError, BadTokenError, TokenExpiredError } from './ApiErrors';
+import { isDev } from '../config';
 
 export class JwtPayload {
   aud: string;
@@ -29,17 +30,25 @@ export class JwtPayload {
 }
 
 async function readPublicKey(): Promise<string> {
-  return promisify(readFile)(
-    path.join(__dirname, '../../keys/public.pem'),
-    'utf8'
-  );
+  // In test environment, always use local keys
+  // In development, use local keys
+  // In production, use Render secrets
+  const keyPath =
+    isDev || process.env.NODE_ENV === 'test'
+      ? path.join(__dirname, '../../keys/public.pem')
+      : '/etc/secrets/public.pem';
+  return await promisify(readFile)(keyPath, 'utf8');
 }
 
 async function readPrivateKey(): Promise<string> {
-  return promisify(readFile)(
-    path.join(__dirname, '../../keys/private.pem'),
-    'utf8'
-  );
+  // In test environment, always use local keys
+  // In development, use local keys
+  // In production, use Render secrets
+  const keyPath =
+    isDev || process.env.NODE_ENV === 'test'
+      ? path.join(__dirname, '../../keys/private.pem')
+      : '/etc/secrets/private.pem';
+  return await promisify(readFile)(keyPath, 'utf8');
 }
 
 async function encode(payload: JwtPayload): Promise<string> {
