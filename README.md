@@ -2,9 +2,9 @@
 
 A production-ready Sprint management backend API built with Node.js, Express, TypeScript, and MongoDB. This project provides comprehensive task management capabilities with AI-powered task suggestions, user authentication, and real-time collaboration features.
 
-[![CI/CD Pipeline](https://github.com/your-username/sprint-sync-be/workflows/CI/badge.svg)](https://github.com/your-username/sprint-sync-be/actions)
-[![codecov](https://codecov.io/gh/your-username/sprint-sync-be/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/sprint-sync-be)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+- [API Production URL](https://sprint-sync-be.onrender.com/api)
+- [API Documentation](https://sprint-sync-be.onrender.com/api-docs)
+- [![CI/CD Pipeline](https://github.com/mpwanyi256/sprint-sync-be/workflows/CI/badge.svg)]
 
 ## 🚀 Features
 

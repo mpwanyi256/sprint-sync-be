@@ -3,6 +3,10 @@ import { readFile } from 'fs';
 import { promisify } from 'util';
 import { sign, verify } from 'jsonwebtoken';
 import { InternalError, BadTokenError, TokenExpiredError } from './ApiErrors';
+import { isDev } from '../config';
+import Logger from './Logger';
+
+const asyncReadFile = promisify(readFile);
 
 export class JwtPayload {
   aud: string;
@@ -28,18 +32,38 @@ export class JwtPayload {
   }
 }
 
+// Resolves possible paths to look for a key file
+function resolveKeyPaths(filename: string): string[] {
+  if (isDev || process.env.NODE_ENV === 'test') {
+    // Local environment
+    return [path.join(__dirname, '../../keys/', filename)];
+  } else {
+    // Production (e.g. Render) - secret files available at these paths
+    return [path.join(process.cwd(), filename), `/etc/secrets/${filename}`];
+  }
+}
+
+// Attempts to read the key from a list of possible paths
+async function readKey(possiblePaths: string[]): Promise<string> {
+  for (const keyPath of possiblePaths) {
+    try {
+      const content = await asyncReadFile(keyPath, 'utf8');
+      Logger.info(`Successfully loaded key from: ${keyPath}`);
+      return content;
+    } catch {
+      Logger.warn(`Key not found at: ${keyPath}`);
+    }
+  }
+  Logger.error('Failed to read key from all possible paths.');
+  throw new InternalError('Failed to read key');
+}
+
 async function readPublicKey(): Promise<string> {
-  return promisify(readFile)(
-    path.join(__dirname, '../../keys/public.pem'),
-    'utf8'
-  );
+  return readKey(resolveKeyPaths('public.pem'));
 }
 
 async function readPrivateKey(): Promise<string> {
-  return promisify(readFile)(
-    path.join(__dirname, '../../keys/private.pem'),
-    'utf8'
-  );
+  return readKey(resolveKeyPaths('private.pem'));
 }
 
 async function encode(payload: JwtPayload): Promise<string> {
@@ -50,7 +74,7 @@ async function encode(payload: JwtPayload): Promise<string> {
 }
 
 /**
- * This method checks the token and returns the decoded data when token is valid in all respect
+ * Validates the JWT token and returns the decoded payload if valid
  */
 async function validate(token: string): Promise<JwtPayload> {
   const cert = await readPublicKey();
@@ -58,14 +82,15 @@ async function validate(token: string): Promise<JwtPayload> {
     // @ts-ignore
     return (await promisify(verify)(token, cert)) as JwtPayload;
   } catch (e: any) {
-    if (e && e.name === 'TokenExpiredError') throw new TokenExpiredError();
-    // throws error if the token has not been encrypted by the private key
+    if (e && e.name === 'TokenExpiredError') {
+      throw new TokenExpiredError();
+    }
     throw new BadTokenError();
   }
 }
 
 /**
- * Returns the decoded payload if the signature is valid even if it is expired
+ * Decodes the token even if it's expired, as long as the signature is valid
  */
 async function decode(token: string): Promise<JwtPayload> {
   const cert = await readPublicKey();
