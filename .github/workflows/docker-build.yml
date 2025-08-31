@@ -1,0 +1,72 @@
+name: Docker Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '20.x'
+        type: string
+
+jobs:
+  docker-build:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      run: docker build -t sprint-sync-api:latest .
+        
+    - name: Test Docker image
+      run: |
+        # Start container in background
+        docker run --rm -d --name test-container \
+          -p 3000:3000 \
+          -e NODE_ENV=production \
+          -e DB_NAME=test \
+          -e DB_MIN_POOL_SIZE=1 \
+          -e DB_MAX_POOL_SIZE=2 \
+          -e PORT=3000 \
+          -e JWT_SECRET=test-secret \
+          -e JWT_ISSUER=test \
+          -e JWT_AUDIENCE=test \
+          -e JWT_ACCESS_TOKEN_VALIDITY=3600 \
+          -e JWT_REFRESH_TOKEN_VALIDITY=86400 \
+          -e LOG_DIR=/tmp/logs \
+          -e CORS_URL=http://localhost:3000 \
+          -e APP_API_KEY=test-key \
+          -e EXPRESS_LIMIT=100mb \
+          sprint-sync-api:latest
+          
+        # Wait for container to start
+        echo "Waiting for container to start..."
+        sleep 20
+        
+        # Check if container is running
+        docker ps | grep test-container
+        
+        # Test health endpoint
+        for i in {1..10}; do
+          if curl -f http://localhost:3000/api/health; then
+            echo "✅ Health check passed"
+            break
+          else
+            echo "❌ Health check failed, attempt $i/10"
+            if [ $i -eq 10 ]; then
+              echo "🔍 Container logs:"
+              docker logs test-container
+              exit 1
+            fi
+            sleep 5
+          fi
+        done
+        
+        # Cleanup
+        docker stop test-container
