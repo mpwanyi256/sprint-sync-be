@@ -19,8 +19,15 @@
     },
     "rootDir": "src",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "build"]
+  "exclude": [
+    "node_modules",
+    "build",
+    "src/**/__tests__/**/*",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "coverage"
+  ]
 }

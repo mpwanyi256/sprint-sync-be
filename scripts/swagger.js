@@ -1,4 +1,5 @@
 const swaggerAutogen = require('swagger-autogen')();
+const constants = process.env.APP_URL;
 
 const doc = {
   info: {
@@ -6,7 +7,7 @@ const doc = {
     version: '1.0.0',
     description: 'API documentation for the Sprint Sync backend application',
   },
-  host: 'localhost:3000',
+  host: constants,
   basePath: '/api',
   schemes: ['http', 'https'],
   consumes: ['application/json'],

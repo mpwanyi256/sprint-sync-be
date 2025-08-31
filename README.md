@@ -344,11 +344,9 @@ yarn seed:tasks
 
 ### Default Users
 
-| Email                     | Password    | Role  | Purpose                 |
-| ------------------------- | ----------- | ----- | ----------------------- |
-| admin@sprintsync.com      | password123 | Admin | Administrative tasks    |
-| john.smith@company.com    | password123 | User  | Regular user testing    |
-| sarah.johnson@company.com | password123 | User  | Task assignment testing |
+| Email                | Password     | Role  | Purpose              |
+| -------------------- | ------------ | ----- | -------------------- |
+| admin@sprintsync.com | password1234 | Admin | Administrative tasks |
 
 ## 🔧 Development Workflow
 
@@ -515,6 +513,7 @@ These resources were instrumental in building this project:
 - [JWT Best Practices](https://auth0.com/blog/a-look-at-the-latest-draft-for-jwt-bcp/) - JSON Web Token guidelines
 - [Node.js Security Checklist](https://blog.risingstack.com/node-js-security-checklist/) - Security best practices
 - [OWASP API Security](https://owasp.org/www-project-api-security/) - API security guidelines
+- [Swagger Docs Autogen](https://swagger-autogen.github.io/docs/getting-started/quick-start)
 
 #### Database & MongoDB
 
