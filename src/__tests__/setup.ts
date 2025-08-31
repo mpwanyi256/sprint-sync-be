@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { connectToDatabase } from '../database';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 import {
   createTestUser,
   createTestTask,
@@ -25,9 +25,17 @@ declare global {
     | undefined;
 }
 
+let mongod: MongoMemoryServer;
+
 beforeAll(async () => {
-  // Connect to test database
-  await connectToDatabase();
+  // Start MongoDB Memory Server
+  mongod = await MongoMemoryServer.create();
+  const uri = mongod.getUri();
+
+  console.log(`Test database setup complete: ${uri}`);
+
+  // Connect to the in-memory database
+  await mongoose.connect(uri);
 
   // Set up JWT mock with default implementations
   const mockJWT = require('../core/JWT').default;
@@ -178,6 +186,12 @@ afterAll(async () => {
 
   // Close database connection after all tests
   await mongoose.connection.close();
+
+  // Stop MongoDB Memory Server
+  if (mongod) {
+    await mongod.stop();
+    console.log('Test database stopped');
+  }
 
   console.log('Test data cleanup completed');
 });

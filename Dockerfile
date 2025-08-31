@@ -1,6 +1,9 @@
 # Use Node.js LTS version
 FROM node:20-alpine
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Set working directory
 WORKDIR /app
 
@@ -21,18 +24,18 @@ RUN yarn install --frozen-lockfile --production=true && yarn cache clean
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nextjs -u 1001
+RUN adduser -S nodeuser -u 1001
 
 # Change ownership of the app directory
-RUN chown -R nextjs:nodejs /app
-USER nextjs
+RUN chown -R nodeuser:nodejs /app
+USER nodeuser
 
-# Expose port
-EXPOSE 3000
+# Expose port (configurable via environment)
+EXPOSE ${PORT:-3000}
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:${PORT:-3000}/api/health || exit 1
 
 # Start the application
 CMD ["yarn", "start"]
