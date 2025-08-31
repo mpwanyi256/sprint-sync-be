@@ -5,6 +5,7 @@ import {
   ITimeLogRepository,
   CreateTimeLogDto,
   UpdateTimeLogDto,
+  PaginatedDailyTimeLogsResult,
 } from '../../repositories/interfaces/ITimeLogRepository';
 import Logger from '../../core/Logger';
 
@@ -145,6 +146,49 @@ export class TimeLogService {
       task: taskId,
       start: new Date(),
     });
+  }
+
+  async getDailyTimeLogsByDateRange(
+    startDate: Date,
+    endDate: Date,
+    page: number = 1,
+    limit: number = 10,
+    userId?: string
+  ): Promise<PaginatedDailyTimeLogsResult> {
+    // Validate inputs
+    if (startDate > endDate) {
+      throw new BadRequestError('Start date must be before end date');
+    }
+
+    if (page < 1) {
+      throw new BadRequestError('Page number must be at least 1');
+    }
+
+    if (limit < 1 || limit > 100) {
+      throw new BadRequestError('Limit must be between 1 and 100');
+    }
+
+    // Calculate date range (ensure we capture the full day in UTC)
+    const startOfDay = new Date(
+      startDate.toISOString().split('T')[0] + 'T00:00:00.000Z'
+    );
+    const endOfDay = new Date(
+      endDate.toISOString().split('T')[0] + 'T23:59:59.999Z'
+    );
+
+    Logger.debug(
+      `Fetching daily time logs from ${startOfDay.toISOString()} to ${endOfDay.toISOString()}${
+        userId ? ` for user: ${userId}` : ''
+      }`
+    );
+
+    return await this.timeLogRepo.getDailyTimeLogsByDateRange(
+      startOfDay,
+      endOfDay,
+      page,
+      limit,
+      userId
+    );
   }
 }
 

@@ -4,7 +4,11 @@ import {
   ITimeLogRepository,
   CreateTimeLogDto,
   UpdateTimeLogDto,
+  DailyTimeLogEntry,
+  TimeLogMetrics,
+  PaginatedDailyTimeLogsResult,
 } from './interfaces/ITimeLogRepository';
+import { Types } from 'mongoose';
 import Logger from '../core/Logger';
 
 export class TimeLogRepository implements ITimeLogRepository {
@@ -170,7 +174,7 @@ export class TimeLogRepository implements ITimeLogRepository {
         if (timeLog.end && timeLog.start) {
           const duration =
             new Date(timeLog.end).getTime() - new Date(timeLog.start).getTime();
-          totalMinutes += Math.round(duration / (1000 * 60)); // Convert milliseconds to minutes
+          totalMinutes += Math.round((duration / (1000 * 60)) * 10) / 10; // Convert milliseconds to minutes with 1 decimal place
         }
       });
 
@@ -182,6 +186,222 @@ export class TimeLogRepository implements ITimeLogRepository {
       Logger.error('Error calculating total time spent on task:', error);
       throw new DatabaseError(
         'Failed to calculate total time spent on task',
+        error
+      );
+    }
+  }
+
+  async getDailyTimeLogsByDateRange(
+    startDate: Date,
+    endDate: Date,
+    page: number,
+    limit: number,
+    userId?: string
+  ): Promise<PaginatedDailyTimeLogsResult> {
+    try {
+      const skip = (page - 1) * limit;
+
+      // Build match condition
+      const matchCondition: any = {
+        end: { $exists: true },
+        start: {
+          $gte: startDate,
+          $lte: endDate,
+        },
+      };
+
+      if (userId) {
+        matchCondition.user = new Types.ObjectId(userId);
+      }
+
+      // Aggregation pipeline for daily time logs
+      const aggregationPipeline = [
+        { $match: matchCondition },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userInfo',
+          },
+        },
+        {
+          $lookup: {
+            from: 'tasks',
+            localField: 'task',
+            foreignField: '_id',
+            as: 'taskInfo',
+          },
+        },
+        {
+          $addFields: {
+            duration: {
+              $divide: [{ $subtract: ['$end', '$start'] }, 1000 * 60],
+            },
+            date: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: '$start',
+              },
+            },
+            user: { $arrayElemAt: ['$userInfo', 0] },
+            task: { $arrayElemAt: ['$taskInfo', 0] },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              date: '$date',
+              userId: '$user._id',
+              taskId: '$task._id',
+            },
+            userName: { $first: '$user.firstName' },
+            userLastName: { $first: '$user.lastName' },
+            taskTitle: { $first: '$task.title' },
+            totalMinutes: { $sum: '$duration' },
+            sessions: { $sum: 1 },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              date: '$_id.date',
+              userId: '$_id.userId',
+            },
+            userName: { $first: '$userName' },
+            userLastName: { $first: '$userLastName' },
+            totalMinutes: { $sum: '$totalMinutes' },
+            taskCount: { $sum: 1 },
+            timeLogs: {
+              $push: {
+                taskId: '$_id.taskId',
+                taskTitle: '$taskTitle',
+                minutes: { $round: ['$totalMinutes', 1] },
+                sessions: '$sessions',
+              },
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            date: '$_id.date',
+            userId: '$_id.userId',
+            userName: {
+              $concat: ['$userName', ' ', '$userLastName'],
+            },
+            totalMinutes: { $round: ['$totalMinutes', 1] },
+            taskCount: 1,
+            timeLogs: 1,
+          },
+        },
+        { $sort: { date: -1 as const, userName: 1 as const } },
+      ];
+
+      // Get total count for pagination
+      const countPipeline = [...aggregationPipeline, { $count: 'totalCount' }];
+
+      const countResult = await TimeLogModel.aggregate(countPipeline);
+      const totalItems = countResult[0]?.totalCount || 0;
+      const totalPages = Math.ceil(totalItems / limit);
+
+      // Get paginated data
+      const dataPipeline = [
+        ...aggregationPipeline,
+        { $skip: skip },
+        { $limit: limit },
+      ];
+
+      const dailyTimeLogs = await TimeLogModel.aggregate(dataPipeline);
+
+      // Calculate metrics for the entire date range
+      const metricsPipeline = [
+        { $match: matchCondition },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user',
+            foreignField: '_id',
+            as: 'userInfo',
+          },
+        },
+        {
+          $lookup: {
+            from: 'tasks',
+            localField: 'task',
+            foreignField: '_id',
+            as: 'taskInfo',
+          },
+        },
+        {
+          $addFields: {
+            duration: {
+              $divide: [{ $subtract: ['$end', '$start'] }, 1000 * 60],
+            },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalMinutes: { $sum: '$duration' },
+            totalSessions: { $sum: 1 },
+            uniqueUsers: { $addToSet: '$user' },
+            uniqueTasks: { $addToSet: '$task' },
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            totalMinutes: { $round: ['$totalMinutes', 1] },
+            totalSessions: 1,
+            totalUsers: { $size: '$uniqueUsers' },
+            totalTasks: { $size: '$uniqueTasks' },
+            averageMinutesPerUser: {
+              $round: [
+                { $divide: ['$totalMinutes', { $size: '$uniqueUsers' }] },
+                1,
+              ],
+            },
+            averageMinutesPerTask: {
+              $round: [
+                { $divide: ['$totalMinutes', { $size: '$uniqueTasks' }] },
+                1,
+              ],
+            },
+          },
+        },
+      ];
+
+      const metricsResult = await TimeLogModel.aggregate(metricsPipeline);
+      const metrics: TimeLogMetrics = metricsResult[0] || {
+        totalMinutes: 0,
+        totalUsers: 0,
+        totalTasks: 0,
+        totalSessions: 0,
+        averageMinutesPerUser: 0,
+        averageMinutesPerTask: 0,
+      };
+
+      Logger.debug(
+        `Retrieved ${dailyTimeLogs.length} daily time log entries for date range ${startDate.toISOString()} - ${endDate.toISOString()}`
+      );
+
+      return {
+        data: dailyTimeLogs as DailyTimeLogEntry[],
+        metrics,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems,
+          itemsPerPage: limit,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      };
+    } catch (error) {
+      Logger.error('Error getting daily time logs by date range:', error);
+      throw new DatabaseError(
+        'Failed to get daily time logs by date range',
         error
       );
     }

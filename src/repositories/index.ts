@@ -18,4 +18,7 @@ export {
   ITimeLogRepository,
   CreateTimeLogDto,
   UpdateTimeLogDto,
+  DailyTimeLogEntry,
+  TimeLogMetrics,
+  PaginatedDailyTimeLogsResult,
 } from './interfaces/ITimeLogRepository';
