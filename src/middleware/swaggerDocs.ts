@@ -2,13 +2,17 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
 import fs from 'fs';
+import { isDev } from '../config';
 
 const router = express.Router();
 
 // Try to load swagger documentation
 // In production build, the file will be in build/scripts/swagger-output.json
 // In development, it will be in scripts/swagger-output.json
-const swaggerPath = path.join(__dirname, '../scripts/swagger-output.json');
+const swaggerPath = path.join(
+  __dirname,
+  isDev ? '../../scripts/swagger-output.json' : '../scripts/swagger-output.json'
+);
 let swaggerDocument: any = null;
 
 try {

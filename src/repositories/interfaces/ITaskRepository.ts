@@ -2,6 +2,10 @@ import { ITask } from '../../models/Task';
 
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
 
+export interface ITaskWithTimeSpent extends ITask {
+  totalTimeSpent: number;
+}
+
 export interface CreateTaskDto {
   title: string;
   description: string;
@@ -32,6 +36,18 @@ export interface PaginationOptions {
 
 export interface PaginatedTasksResult {
   tasks: ITask[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
+
+export interface PaginatedTasksWithTimeSpentResult {
+  tasks: ITaskWithTimeSpent[];
   pagination: {
     currentPage: number;
     totalPages: number;

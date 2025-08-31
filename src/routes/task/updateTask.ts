@@ -39,6 +39,7 @@ router.patch(
       title: updatedTask.title,
       description: updatedTask.description,
       totalMinutes: updatedTask.totalMinutes,
+      totalTimeSpent: updatedTask.totalTimeSpent || 0,
       createdBy: updatedTask.createdBy,
       assignee: updatedTask.assignee,
       createdAt: updatedTask.createdAt,

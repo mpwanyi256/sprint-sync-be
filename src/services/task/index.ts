@@ -7,8 +7,10 @@ import {
   UpdateTaskDto,
   TaskFilters,
   PaginationOptions,
-  PaginatedTasksResult,
+  PaginatedTasksWithTimeSpentResult,
+  ITaskWithTimeSpent,
 } from '../../repositories/interfaces/ITaskRepository';
+import { timeLogService } from '../timeLog';
 import Logger from '../../core/Logger';
 
 export class TaskService {
@@ -43,12 +45,18 @@ export class TaskService {
     return task;
   }
 
-  async getTaskById(id: string): Promise<ITask> {
+  async getTaskById(id: string): Promise<ITaskWithTimeSpent> {
     const task = await this.taskRepo.findById(id);
     if (!task) {
       throw new NotFoundError('Task not found');
     }
-    return task;
+
+    const totalTimeSpent = await timeLogService.getTotalTimeSpentOnTask(id);
+
+    return {
+      ...task,
+      totalTimeSpent,
+    };
   }
 
   async getTasksByUser(userId: string): Promise<ITask[]> {
@@ -64,7 +72,7 @@ export class TaskService {
   async getAllTasksWithPagination(
     filters: TaskFilters,
     pagination: PaginationOptions
-  ): Promise<PaginatedTasksResult> {
+  ): Promise<PaginatedTasksWithTimeSpentResult> {
     // Validate pagination parameters
     if (pagination.page < 1) {
       throw new BadRequestError('Page number must be at least 1');
@@ -94,18 +102,34 @@ export class TaskService {
       pagination
     );
 
+    // Add total time spent for each task
+    const tasksWithTimeSpent = await Promise.all(
+      result.tasks.map(async task => {
+        const totalTimeSpent = await timeLogService.getTotalTimeSpentOnTask(
+          task._id!.toString()
+        );
+        return {
+          ...task,
+          totalTimeSpent,
+        };
+      })
+    );
+
     Logger.debug(
       `Task service returned ${result.tasks.length} tasks for status: ${filters.status || 'all'}`
     );
 
-    return result;
+    return {
+      ...result,
+      tasks: tasksWithTimeSpent,
+    };
   }
 
   async updateTask(
     id: string,
     taskData: UpdateTaskDto,
     userId: string
-  ): Promise<ITask> {
+  ): Promise<ITaskWithTimeSpent> {
     // First check if task exists and user has permission
     const existingTask = await this.taskRepo.findById(id);
     if (!existingTask) {
@@ -133,6 +157,19 @@ export class TaskService {
       );
     }
 
+    // Handle TimeLog logic for status changes
+    if (
+      taskData.status !== undefined &&
+      taskData.status !== existingTask.status
+    ) {
+      await this.handleStatusChangeTimeLog(
+        id,
+        existingTask.status,
+        taskData.status,
+        userId
+      );
+    }
+
     Logger.info(`Updating task: ${id} by user: ${userId}`);
 
     const updatedTask = await this.taskRepo.update(id, taskData);
@@ -140,8 +177,43 @@ export class TaskService {
       throw new NotFoundError('Task not found during update');
     }
 
+    // Add total time spent
+    const totalTimeSpent = await timeLogService.getTotalTimeSpentOnTask(id);
+
     Logger.info(`Task updated successfully: ${updatedTask.title}`);
-    return updatedTask;
+    return {
+      ...updatedTask,
+      totalTimeSpent,
+    };
+  }
+
+  private async handleStatusChangeTimeLog(
+    taskId: string,
+    oldStatus: string,
+    newStatus: string,
+    userId: string
+  ): Promise<void> {
+    Logger.info(
+      `Handling status change for task ${taskId}: ${oldStatus} -> ${newStatus} by user ${userId}`
+    );
+
+    // End any active time log first
+    const activeTimeLog = await timeLogService.getActiveTimeLogForUserAndTask(
+      userId,
+      taskId
+    );
+    if (activeTimeLog) {
+      await timeLogService.endTimeLog(activeTimeLog._id!.toString());
+      Logger.info(
+        `Ended active time log for task ${taskId} and user ${userId}`
+      );
+    }
+
+    // Start new time log only if new status is IN_PROGRESS
+    if (newStatus === 'IN_PROGRESS') {
+      await timeLogService.startTimeLog(userId, taskId);
+      Logger.info(`Started new time log for task ${taskId} and user ${userId}`);
+    }
   }
 
   async deleteTask(id: string, userId: string): Promise<boolean> {
@@ -166,13 +238,28 @@ export class TaskService {
     return success;
   }
 
-  async searchTasks(searchTerm: string): Promise<ITask[]> {
+  async searchTasks(searchTerm: string): Promise<ITaskWithTimeSpent[]> {
     if (!searchTerm || searchTerm.trim().length === 0) {
       throw new BadRequestError('Search term is required');
     }
 
     Logger.debug(`Searching tasks with term: ${searchTerm}`);
-    return await this.taskRepo.searchByText(searchTerm);
+    const tasks = await this.taskRepo.searchByText(searchTerm);
+
+    // Add total time spent for each task
+    const tasksWithTimeSpent = await Promise.all(
+      tasks.map(async task => {
+        const totalTimeSpent = await timeLogService.getTotalTimeSpentOnTask(
+          task._id!.toString()
+        );
+        return {
+          ...task,
+          totalTimeSpent,
+        };
+      })
+    );
+
+    return tasksWithTimeSpent;
   }
 
   async assignTask(
