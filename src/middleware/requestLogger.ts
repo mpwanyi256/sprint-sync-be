@@ -3,16 +3,8 @@ import Logger from '../core/Logger';
 import { ProtectedRequest } from '../types/AppRequests';
 import { ApiError, InternalError } from '../core/ApiErrors';
 import { isDev } from '../config';
-
-export interface RequestLogData {
-  method: string;
-  path: string;
-  userId?: string;
-  userAgent?: string;
-  ip: string;
-  startTime: number;
-  requestId: string;
-}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { RequestLogData } from '../types/express';
 
 // Generate a simple request ID
 const generateRequestId = (): string => {
@@ -55,7 +47,7 @@ export const requestLogger = (
 
   // Override res.json to log response
   const originalJson = res.json;
-  res.json = function (body: any) {
+  res.json = function (body: unknown) {
     const endTime = Date.now();
     const latency = endTime - startTime;
 
@@ -77,7 +69,7 @@ export const requestLogger = (
 
   // Override res.send to log response for non-JSON responses
   const originalSend = res.send;
-  res.send = function (body: any) {
+  res.send = function (body: unknown) {
     const endTime = Date.now();
     const latency = endTime - startTime;
 

@@ -1,0 +1,20 @@
+// Set test environment variables
+process.env.NODE_ENV = 'test';
+process.env.PORT = '3001';
+process.env.CORS_URL = 'http://localhost:3000';
+process.env.DB_NAME = 'test_db';
+process.env.DB_USER = 'test';
+process.env.DB_PASSWORD = 'test';
+process.env.DB_MIN_POOL_SIZE = '1';
+process.env.DB_MAX_POOL_SIZE = '5';
+process.env.APP_API_KEY = 'test-api-key';
+process.env.LOG_DIR = './logs';
+process.env.JWT_PRIVATE_KEY_PATH = './keys/private.pem.example';
+process.env.JWT_PUBLIC_KEY_PATH = './keys/public.pem.example';
+process.env.JWT_ISSUER = 'test-issuer';
+process.env.JWT_AUDIENCE = 'test-audience';
+process.env.JWT_ACCESS_TOKEN_VALIDITY = '3600';
+process.env.JWT_REFRESH_TOKEN_VALIDITY = '86400';
+process.env.EXPRESS_LIMIT = '10mb';
+process.env.PARAMETER_LIMIT = '5000';
+process.env.OPENAI_API_KEY = 'test-openai-key';

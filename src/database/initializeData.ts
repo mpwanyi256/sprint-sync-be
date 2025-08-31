@@ -1,4 +1,4 @@
-import { db } from '../config';
+import { db } from './index';
 import Logger from '../core/Logger';
 import { UserModel } from '../models/User';
 import mongoose from 'mongoose';
@@ -21,7 +21,7 @@ const populateAPIKeys = async () => {
       .listCollections()
       .toArray();
     const collectionNames = collections.map(
-      (collection: any) => collection.name
+      (collection: { name: string }) => collection.name
     );
 
     if (!collectionNames.includes('api_keys')) {
@@ -68,7 +68,7 @@ const poulateAdminUser = async () => {
         {
           firstName: 'Admin',
           lastName: 'Account',
-          email: 'admin@admin.com',
+          email: 'admin@sprintsync.com',
           isAdmin: true,
           password: await bcrypt.hash('admin1234', 10),
         } as User,
@@ -105,7 +105,7 @@ export const initCollection = async (collectionName: string) => {
   }
 };
 
-export const initializeDBData = async (mongoose: any) => {
+export const initializeDBData = async (mongoose: typeof import('mongoose')) => {
   try {
     Logger.info('Initializing DB Data');
     if (!mongoose) {
@@ -123,7 +123,7 @@ export const initializeDBData = async (mongoose: any) => {
       .toArray();
 
     const collectionNames = collections.map(
-      (collection: any) => collection.name
+      (collection: { name: string }) => collection.name
     );
     Logger.debug(`Existing collections: ${collectionNames.join(', ')}`);
 

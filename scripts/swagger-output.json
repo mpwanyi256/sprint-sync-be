@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "description": "API documentation for the Sprint Sync backend application"
   },
-  "host": "localhost:3000",
   "basePath": "/api",
   "tags": [
     {

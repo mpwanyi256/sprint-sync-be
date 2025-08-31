@@ -1,7 +1,14 @@
 import mongoose from 'mongoose';
-import { db } from '../config';
 import Logger from '../core/Logger';
 import { initializeDBData } from './initializeData';
+import { dbUri, environment, dbMinPoolSize, dbMaxPoolSize } from '../config';
+
+export const db = {
+  apikey: process.env.APP_API_KEY!,
+  uri: dbUri[environment as keyof typeof dbUri],
+  minPoolSize: dbMinPoolSize,
+  maxPoolSize: dbMaxPoolSize,
+};
 
 const options = {
   autoIndex: true,
@@ -19,11 +26,10 @@ function setRunValidators() {
 
 mongoose.set('strictQuery', true);
 
-mongoose.plugin((schema: any) => {
+mongoose.plugin((schema: mongoose.Schema) => {
   schema.pre('findOneAndUpdate', setRunValidators);
   schema.pre('updateMany', setRunValidators);
   schema.pre('updateOne', setRunValidators);
-  schema.pre('update', setRunValidators);
 });
 
 export async function connectToDatabase(): Promise<void> {
@@ -42,10 +48,8 @@ export async function connectToDatabase(): Promise<void> {
     );
     Logger.debug(`Connecting to MongoDB via ${db.uri}`);
 
-    // Add connection timeout and better error handling
     const connectionPromise = mongoose.connect(db.uri, options);
 
-    // Set a timeout for the connection
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(
         () => reject(new Error('Connection timeout after 30 seconds')),

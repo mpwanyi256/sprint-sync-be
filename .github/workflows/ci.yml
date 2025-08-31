@@ -2,82 +2,94 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [ master, develop ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+env:
+  NODE_VERSION: '20.x'
 
 jobs:
-  test-and-build:
-    runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [20.x, 22.x]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'yarn'
-        
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
-      
-    - name: Run ESLint
-      run: yarn lint
-      
-    - name: Run Prettier check
-      run: yarn format --check
-      
-    - name: Run TypeScript type checking
-      run: yarn check
-      
-    - name: Run tests
-      run: yarn test
-      env:
-        NODE_ENV: test
-        
-    - name: Build application
-      run: yarn build
+  # Code Quality Checks (runs in parallel)
+  code-quality:
+    name: Code Quality
+    uses: ./.github/workflows/code-quality.yml
+    with:
+      node-version: '20.x'
 
+  # Security Audit (runs in parallel)
   security-audit:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20.x'
-        cache: 'yarn'
-        
-    - name: Install dependencies
-      run: yarn install --frozen-lockfile
-      
-    - name: Run security audit
-      run: yarn audit --level moderate
-      continue-on-error: true
+    name: Security Audit
+    uses: ./.github/workflows/security-audit.yml
+    with:
+      node-version: '20.x'
 
+  # Test and Build with Node 20.x (primary)
+  test-and-build-primary:
+    name: Test & Build (Primary)
+    needs: [code-quality]  # Only run after code quality passes
+    uses: ./.github/workflows/test-and-build.yml
+    with:
+      node-version: '20.x'
+      upload-coverage: true
+
+  # Test and Build with Node 22.x (compatibility check)
+  test-and-build-compat:
+    name: Test & Build (Node 22.x)
+    needs: [code-quality]  # Only run after code quality passes
+    uses: ./.github/workflows/test-and-build.yml
+    with:
+      node-version: '22.x'
+      upload-coverage: false
+
+  # Docker Build (only for master branch and after primary tests pass)
   docker-build:
+    name: Docker Build & Test
+    needs: [test-and-build-primary]
+    if: github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/docker-build.yml
+    with:
+      node-version: '20.x'
+
+  # Summary job (always runs)
+  ci-summary:
+    name: CI Summary
     runs-on: ubuntu-latest
-    needs: [test-and-build]
+    needs: [code-quality, security-audit, test-and-build-primary, test-and-build-compat, docker-build]
+    if: always()
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Build Docker image
-      run: docker build -t sprint-sync-api:latest .
-        
-    - name: Test Docker image health
+    - name: Generate Summary
       run: |
-        docker run --rm -d --name test-container -p 3000:3000 sprint-sync-api:latest
-        sleep 15
-        curl -f http://localhost:3000/api/health || exit 1
-        docker stop test-container
+        echo "## 🚀 CI/CD Pipeline Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| Code Quality | ${{ needs.code-quality.result == 'success' && '✅ Passed' || needs.code-quality.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Audit | ${{ needs.security-audit.result == 'success' && '✅ Passed' || needs.security-audit.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Test & Build (Node 20.x) | ${{ needs.test-and-build-primary.result == 'success' && '✅ Passed' || needs.test-and-build-primary.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Test & Build (Node 22.x) | ${{ needs.test-and-build-compat.result == 'success' && '✅ Passed' || needs.test-and-build-compat.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| Docker Build | ${{ needs.docker-build.result == 'success' && '✅ Passed' || needs.docker-build.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Determine overall status
+        OVERALL_STATUS="✅ Success"
+        if [[ "${{ needs.code-quality.result }}" == "failure" || "${{ needs.test-and-build-primary.result }}" == "failure" ]]; then
+          OVERALL_STATUS="❌ Failed"
+        elif [[ "${{ needs.docker-build.result }}" == "failure" && "${{ needs.docker-build.result }}" != "skipped" ]]; then
+          OVERALL_STATUS="❌ Failed"
+        fi
+        
+        echo "**Overall Status: $OVERALL_STATUS**" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "$OVERALL_STATUS" == "❌ Failed" ]]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "❗ **Action Required**: Please check the failed jobs above and fix the issues." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Add note about Node.js compatibility
+        if [[ "${{ needs.test-and-build-compat.result }}" == "failure" ]]; then
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "⚠️ **Note**: Node.js 22.x compatibility check failed. Consider updating dependencies for better compatibility." >> $GITHUB_STEP_SUMMARY
+        fi

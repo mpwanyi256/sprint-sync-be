@@ -12,6 +12,8 @@ module.exports = {
     'scripts/**/*.js',
     'commitlint.config.js',
     '*.d.ts',
+    'src/__tests__/**/*',
+    'coverage/**/*',
   ],
   overrides: [
     {
