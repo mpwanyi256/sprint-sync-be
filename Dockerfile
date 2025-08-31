@@ -16,8 +16,8 @@ RUN yarn install --frozen-lockfile --production=false
 # Copy source code
 COPY . .
 
-# Build the application
-RUN yarn build
+# Build the application (including swagger docs)
+RUN yarn build:prod
 
 # Remove development dependencies
 RUN yarn install --frozen-lockfile --production=true && yarn cache clean

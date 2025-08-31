@@ -7,8 +7,10 @@
     "@": "build"
   },
   "scripts": {
-    "start": "yarn build && yarn serve",
-    "build": "yarn swagger && yarn clean && yarn build-ts",
+    "start": "yarn serve",
+    "build": "yarn swagger && yarn clean && yarn build-ts && yarn copy-swagger",
+    "build:prod": "yarn swagger && yarn clean && yarn build-ts && yarn copy-swagger",
+    "copy-swagger": "mkdir -p build/scripts && cp scripts/swagger-output.json build/scripts/",
     "build-ts": "tsc",
     "swagger": "node ./scripts/swagger.js",
     "clean": "rimraf ./build",
