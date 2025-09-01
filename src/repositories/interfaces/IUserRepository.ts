@@ -5,6 +5,7 @@ export interface CreateUserDto {
   lastName: string;
   email: string;
   password: string;
+  isAdmin?: boolean;
 }
 
 export interface UserFilters {
@@ -33,6 +34,7 @@ export interface IUserRepository {
   findByEmail(email: string): Promise<User | null>;
   create(userData: CreateUserDto): Promise<User>;
   findById(id: string): Promise<User | null>;
+  updateById(id: string, updateData: Partial<User>): Promise<User | null>;
   getAllUsersWithPagination(
     filters: UserFilters,
     pagination: PaginationOptions

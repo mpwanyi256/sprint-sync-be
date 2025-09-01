@@ -64,6 +64,33 @@ export class UserRepository implements IUserRepository {
     }
   }
 
+  async updateById(
+    id: string,
+    updateData: Partial<User>
+  ): Promise<User | null> {
+    try {
+      const user = await UserModel.findByIdAndUpdate(
+        id,
+        { ...updateData, updatedAt: new Date() },
+        { new: true, runValidators: true }
+      )
+        .select('firstName lastName email isAdmin createdAt updatedAt')
+        .lean()
+        .exec();
+
+      if (!user) {
+        Logger.debug(`User not found for update with id: ${id}`);
+        return null;
+      }
+
+      Logger.info(`User updated with id: ${id}`);
+      return user as User;
+    } catch (error: any) {
+      Logger.error('Error updating user by id:', error);
+      throw new DatabaseError('Failed to update user by id', error);
+    }
+  }
+
   async getAllUsersWithPagination(
     filters: UserFilters,
     pagination: PaginationOptions

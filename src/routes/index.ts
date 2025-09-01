@@ -5,6 +5,7 @@ import aiRoutes from './ai';
 import userRoutes from './users';
 import healthRoutes from './health';
 import timeLogRoutes from './timeLog';
+import adminRoutes from './admin';
 import apiKey from '../middleware/api-key';
 import permission from '../middleware/permission';
 import { Permission } from '../types/AppRequests';
@@ -24,5 +25,6 @@ router.use('/tasks', taskRoutes);
 router.use('/ai', aiRoutes);
 router.use('/users', userRoutes);
 router.use('/timelogs', timeLogRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

@@ -519,6 +519,96 @@
           }
         }
       }
+    },
+    "/admin/users": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Bulk create users (Admin only)",
+        "description": "Create multiple users at once with password hashing. Supports creating admin users.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "users": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/admin/tasks": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Bulk create tasks (Admin only)",
+        "description": "Create multiple tasks at once. All tasks will be created by the admin user.",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "tasks": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/admin/users/{userId}/role": {
+      "patch": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Update user admin status (Admin only)",
+        "description": "Assign or remove admin privileges from a user. Admins can promote/demote other users.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "isAdmin": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
     }
   },
   "definitions": {
