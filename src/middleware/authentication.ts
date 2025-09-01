@@ -18,6 +18,20 @@ const router = express.Router();
 export default router.use(
   asyncHandler(async (req: ProtectedRequest, res, next) => {
     try {
+      // Check if user was already resolved by requestLogger middleware
+      if (req.userResolvedByLogger && req.user && req.keystore) {
+        Logger.debug('Using user and keystore resolved by requestLogger', {
+          userId: req.user._id,
+          email: req.user.email,
+        });
+        return next();
+      }
+
+      // Fallback to original authentication logic if requestLogger didn't resolve user
+      Logger.debug(
+        'RequestLogger did not resolve user, performing full authentication'
+      );
+
       // Extract access token from Authorization header
       const accessToken = getAccessToken(req.headers.authorization);
       req.accessToken = accessToken;

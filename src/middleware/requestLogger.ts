@@ -3,6 +3,13 @@ import Logger from '../core/Logger';
 import { ProtectedRequest } from '../types/AppRequests';
 import { ApiError, InternalError } from '../core/ApiErrors';
 import { isDev } from '../config';
+import { getAccessToken, validateTokenData } from '../helpers/authUtils';
+import JWT from '../core/JWT';
+import { userService } from '../services/user';
+import { KeystoreRepository } from '../repositories/KeystoreRepository';
+import asyncHandler from '../core/AsyncHandler';
+import { User } from '../types/User';
+import { Keystore } from '../types/AppRequests';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { RequestLogData } from '../types/express';
 
@@ -14,35 +21,98 @@ const generateRequestId = (): string => {
   );
 };
 
+// Optional user resolution from authorization header
+const resolveUserFromToken = async (
+  req: Request
+): Promise<{ user?: User; userId?: string; keystore?: Keystore }> => {
+  try {
+    // Check if Authorization header exists
+    const authorization = req.headers.authorization;
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return { userId: 'anonymous' };
+    }
+
+    // Extract and validate access token
+    const accessToken = getAccessToken(authorization);
+    const payload = await JWT.validate(accessToken);
+    validateTokenData(payload);
+
+    // Find user by ID from token subject
+    const user = await userService.findUserById(payload.sub);
+    if (!user) {
+      Logger.warn(`User not found for token subject: ${payload.sub}`, {
+        requestAuth: true,
+      });
+      return { userId: 'invalid-token' };
+    }
+
+    // Validate keystore to ensure token is still valid
+    const keystoreRepo = new KeystoreRepository();
+    const keystore = await keystoreRepo.findforKey(user, payload.prm);
+    if (!keystore) {
+      Logger.warn(`Invalid keystore for user: ${user.email}`, {
+        requestAuth: true,
+      });
+      return { userId: 'invalid-keystore' };
+    }
+
+    return {
+      user,
+      userId: user._id.toString(),
+      keystore,
+    };
+  } catch (error) {
+    // Silent failure for optional token resolution
+    Logger.debug('Token resolution failed (optional)', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+    return { userId: 'token-error' };
+  }
+};
+
 // Request type extension is now in src/types/express.d.ts
 
-export const requestLogger = (
+const requestLoggerAsync = async (
   req: Request,
   res: Response,
   next: NextFunction
-): void => {
+): Promise<void> => {
   const startTime = Date.now();
   const requestId = generateRequestId();
+
+  // Synchronous user resolution for proper logging
+  const { user, userId, keystore } = await resolveUserFromToken(req);
+
+  // Set resolved user data on request for authentication middleware to reuse
+  if (user && keystore) {
+    (req as ProtectedRequest).user = user;
+    (req as ProtectedRequest).keystore = keystore;
+    (req as ProtectedRequest).accessToken =
+      req.headers.authorization?.split(' ')[1] || '';
+    // Set a flag to indicate user was resolved by requestLogger
+    req.userResolvedByLogger = true;
+  }
 
   // Store request data for use in response logging
   req.requestLogData = {
     method: req.method,
     path: req.originalUrl || req.url,
-    userId: (req as ProtectedRequest).user?._id?.toString(),
+    userId: userId || 'anonymous',
     userAgent: req.get('User-Agent'),
     ip: req.ip || req.connection.remoteAddress || 'unknown',
     startTime,
     requestId,
   };
 
-  // Log incoming request
+  // Log incoming request with actual user ID
   Logger.info('Incoming request', {
     requestId,
     method: req.method,
     path: req.originalUrl || req.url,
     ip: req.requestLogData.ip,
     userAgent: req.requestLogData.userAgent,
-    userId: req.requestLogData.userId || 'anonymous',
+    userId: req.requestLogData.userId,
+    userResolved: !!user,
   });
 
   // Override res.json to log response
@@ -93,6 +163,9 @@ export const requestLogger = (
 
   next();
 };
+
+// Export wrapped with asyncHandler for proper error handling
+export const requestLogger = asyncHandler(requestLoggerAsync);
 
 export const errorHandler = (
   error: Error,
