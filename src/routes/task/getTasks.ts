@@ -75,7 +75,7 @@ router.get(
       totalMinutes: task.totalMinutes,
       totalTimeSpent: task.totalTimeSpent || 0,
       createdBy: task.createdBy,
-      assignee: task.assignee,
+      assignedTo: task.assignee,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     }));

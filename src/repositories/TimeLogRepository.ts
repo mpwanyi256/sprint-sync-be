@@ -80,6 +80,30 @@ export class TimeLogRepository implements ITimeLogRepository {
     }
   }
 
+  async findActiveTimeLogsForTask(taskId: string): Promise<ITimeLog[]> {
+    try {
+      const activeTimeLogs = await TimeLogModel.find({
+        task: taskId,
+        end: { $exists: false },
+      })
+        .populate('user', 'firstName lastName email')
+        .sort({ start: -1 })
+        .lean()
+        .exec();
+
+      Logger.debug(
+        `Found ${activeTimeLogs.length} active time logs for task: ${taskId}`
+      );
+      return activeTimeLogs as ITimeLog[];
+    } catch (error) {
+      Logger.error('Error finding active time logs for task:', error);
+      throw new DatabaseError(
+        'Failed to find active time logs for task',
+        error
+      );
+    }
+  }
+
   async findByTask(taskId: string): Promise<ITimeLog[]> {
     try {
       const timeLogs = await TimeLogModel.find({ task: taskId })

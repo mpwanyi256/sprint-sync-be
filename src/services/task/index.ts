@@ -197,22 +197,36 @@ export class TaskService {
       `Handling status change for task ${taskId}: ${oldStatus} -> ${newStatus} by user ${userId}`
     );
 
-    // End any active time log first
-    const activeTimeLog = await timeLogService.getActiveTimeLogForUserAndTask(
-      userId,
-      taskId
-    );
-    if (activeTimeLog) {
-      await timeLogService.endTimeLog(activeTimeLog._id!.toString());
-      Logger.info(
-        `Ended active time log for task ${taskId} and user ${userId}`
-      );
-    }
-
-    // Start new time log only if new status is IN_PROGRESS
+    // If moving TO 'IN_PROGRESS', end any existing active time logs for this task
+    // and start a new one for the current user
     if (newStatus === 'IN_PROGRESS') {
+      // End ALL active time logs for this task (from any user)
+      const endedCount =
+        await timeLogService.endAllActiveTimeLogsForTask(taskId);
+      if (endedCount > 0) {
+        Logger.info(
+          `Ended ${endedCount} active time log(s) for task ${taskId} when moving to IN_PROGRESS`
+        );
+      }
+
+      // Start new time log for the current user
       await timeLogService.startTimeLog(userId, taskId);
       Logger.info(`Started new time log for task ${taskId} and user ${userId}`);
+    }
+    // If moving FROM 'IN_PROGRESS' to any other status, end ALL active time logs
+    else if (
+      oldStatus === 'IN_PROGRESS' ||
+      newStatus === 'DONE' ||
+      newStatus === 'TODO'
+    ) {
+      // End ALL active time logs for this task regardless of user
+      const endedCount =
+        await timeLogService.endAllActiveTimeLogsForTask(taskId);
+      if (endedCount > 0) {
+        Logger.info(
+          `Ended ${endedCount} active time log(s) for task ${taskId} when moving to ${newStatus}`
+        );
+      }
     }
   }
 

@@ -53,6 +53,7 @@ export interface ITimeLogRepository {
     userId: string,
     taskId: string
   ): Promise<ITimeLog | null>;
+  findActiveTimeLogsForTask(taskId: string): Promise<ITimeLog[]>;
   findByTask(taskId: string): Promise<ITimeLog[]>;
   findByUser(userId: string): Promise<ITimeLog[]>;
   update(id: string, timeLogData: UpdateTimeLogDto): Promise<ITimeLog | null>;

@@ -106,6 +106,43 @@ export class TimeLogService {
     return await this.endTimeLog(activeTimeLog._id!.toString());
   }
 
+  async endAllActiveTimeLogsForTask(taskId: string): Promise<number> {
+    Logger.info(`Ending all active time logs for task: ${taskId}`);
+
+    const activeTimeLogs =
+      await this.timeLogRepo.findActiveTimeLogsForTask(taskId);
+
+    if (activeTimeLogs.length === 0) {
+      Logger.debug(`No active time logs found for task: ${taskId}`);
+      return 0;
+    }
+
+    let endedCount = 0;
+    const endTime = new Date();
+
+    for (const timeLog of activeTimeLogs) {
+      try {
+        await this.timeLogRepo.update(timeLog._id!.toString(), {
+          end: endTime,
+        });
+        endedCount++;
+        Logger.debug(
+          `Ended time log ${timeLog._id} for user ${timeLog.user} on task ${taskId}`
+        );
+      } catch (error) {
+        Logger.error(
+          `Failed to end time log ${timeLog._id} for task ${taskId}:`,
+          error
+        );
+      }
+    }
+
+    Logger.info(
+      `Successfully ended ${endedCount} out of ${activeTimeLogs.length} active time logs for task: ${taskId}`
+    );
+    return endedCount;
+  }
+
   async deleteTimeLog(id: string): Promise<boolean> {
     const existingTimeLog = await this.timeLogRepo.findById(id);
     if (!existingTimeLog) {

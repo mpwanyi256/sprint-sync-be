@@ -278,15 +278,70 @@ export class TaskRepository implements ITaskRepository {
 
   async searchByText(searchTerm: string): Promise<ITask[]> {
     try {
-      const tasks = await TaskModel.find(
-        { $text: { $search: searchTerm } },
-        { score: { $meta: 'textScore' } }
-      )
-        .populate('createdBy', 'firstName lastName email')
-        .sort({ score: { $meta: 'textScore' } })
-        .limit(10)
-        .lean()
-        .exec();
+      // Escape special regex characters for MongoDB regex
+      const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+      // Strategy 1: Try MongoDB $text search first (if text index exists)
+      let tasks: any[] = [];
+      let searchMethod = '';
+
+      try {
+        // Attempt full-text search first
+        tasks = await TaskModel.find(
+          { $text: { $search: searchTerm } },
+          { score: { $meta: 'textScore' } }
+        )
+          .populate('createdBy', 'firstName lastName email')
+          .sort({ score: { $meta: 'textScore' } })
+          .limit(10)
+          .lean()
+          .exec();
+
+        searchMethod = 'MongoDB $text search';
+        Logger.debug(
+          `Text search found ${tasks.length} results for: "${searchTerm}"`
+        );
+      } catch (textSearchError) {
+        // If text search fails, use regex search as fallback
+        Logger.debug(
+          'Text search unavailable, falling back to regex search',
+          textSearchError
+        );
+      }
+
+      // Strategy 2: If no results from text search or text search failed, use regex
+      if (tasks.length === 0) {
+        const searchQuery = {
+          $or: [
+            {
+              title: {
+                $regex: escapedTerm,
+                $options: 'i', // Case-insensitive
+              },
+            },
+            {
+              description: {
+                $regex: escapedTerm,
+                $options: 'i', // Case-insensitive
+              },
+            },
+          ],
+        };
+
+        Logger.debug(
+          `Using regex search with query:`,
+          JSON.stringify(searchQuery)
+        );
+
+        tasks = await TaskModel.find(searchQuery)
+          .populate('createdBy', 'firstName lastName email')
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .lean()
+          .exec();
+
+        searchMethod = 'MongoDB $regex search';
+      }
 
       // Get assignee information for each task
       const tasksWithAssignees = await Promise.all(
@@ -307,7 +362,7 @@ export class TaskRepository implements ITaskRepository {
       );
 
       Logger.debug(
-        `Found ${tasksWithAssignees.length} tasks matching search: ${searchTerm}`
+        `Found ${tasksWithAssignees.length} tasks matching search: "${searchTerm}" using ${searchMethod}`
       );
       return tasksWithAssignees as ITask[];
     } catch (error: any) {
