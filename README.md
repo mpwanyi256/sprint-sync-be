@@ -2,6 +2,12 @@
 
 A production-ready Sprint management backend API built with Node.js, Express, TypeScript, and MongoDB. This project provides comprehensive task management capabilities with AI-powered task suggestions, user authentication, and real-time collaboration features.
 
+FrontEnd
+
+- [Project URL](https://sprint-sync-fe.vercel.app)
+
+Backend
+
 - [API Production URL](https://sprint-sync-be.onrender.com/api)
 - [API Documentation](https://sprint-sync-be.onrender.com/api-docs)
 - [![CI/CD Pipeline](https://github.com/mpwanyi256/sprint-sync-be/workflows/CI/badge.svg)]
