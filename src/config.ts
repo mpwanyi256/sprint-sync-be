@@ -36,3 +36,5 @@ export const dbUri = {
   production: `mongodb+srv://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@sprintsync.q5lzcgb.mongodb.net/${dbName}?retryWrites=true&w=majority`,
   test: `mongodb://localhost:27017/test`,
 };
+
+export const sentryDsn = process.env.SENTRY_DSN!;

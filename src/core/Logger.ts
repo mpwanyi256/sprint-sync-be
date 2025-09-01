@@ -2,7 +2,8 @@ import { createLogger, transports, format } from 'winston';
 import fs from 'fs';
 import path from 'path';
 import DailyRotateFile from 'winston-daily-rotate-file';
-import { environment, logDirectory } from '../config';
+import SentryWInston from 'winston-sentry-log';
+import { environment, logDirectory, sentryDsn, isDev } from '../config';
 
 let dir = logDirectory;
 if (!dir) dir = path.resolve('logs');
@@ -39,6 +40,17 @@ export default createLogger({
         format.errors({ stack: true }),
         format.prettyPrint()
       ),
+    }),
+    new SentryWInston({
+      config: {
+        dsn: sentryDsn,
+        environment,
+        release: process.env.npm_package_version,
+        tracesSampleRate: 1.0,
+        sendDefaultPii: true,
+        enabled: !isDev,
+      },
+      level: logLevel,
     }),
     dailyRotateFile,
   ],

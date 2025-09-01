@@ -1,3 +1,4 @@
+import './core/Sentry';
 import express from 'express';
 import cors from 'cors';
 import { corsUrl, expressLimit, parameterLimit } from './config';
