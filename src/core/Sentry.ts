@@ -8,6 +8,5 @@ Sentry.init({
     Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
   ],
   // Enable logs to be sent to Sentry
-  enableLogs: true,
-  enabled: !isDev,
+  enableLogs: !isDev,
 });

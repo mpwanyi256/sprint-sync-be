@@ -28,6 +28,7 @@ Backend
 - **Production Ready**: Docker containerization with optimized builds
 - **Auto-generated Documentation**: Swagger/OpenAPI docs generated automatically
 - **Structured Logging**: JSON-formatted logs with request correlation
+- **Error Monitoring**: Sentry integration for error tracking and performance tracing
 - **Type Safety**: Full TypeScript implementation with strict type checking
 - **Quality Assurance**: Pre-commit hooks, linting, and comprehensive testing
 - **CI/CD Pipeline**: GitHub Actions for automated testing and deployment
@@ -204,6 +205,9 @@ NODE_ENV=development
 
 # CORS
 CORS_URL=*
+
+# Sentry (optional but recommended)
+SENTRY_DSN=
 ```
 
 #### 4. Generate RSA Keys
@@ -501,6 +505,14 @@ POST   /api/ai/suggest      # Generate task description from title
 ```
 GET    /api/health          # Health check with system info
 ```
+
+## 🛡️ Monitoring & Observability
+
+- **Sentry** is integrated for error tracking and performance profiling.
+  - Initialization: see `src/core/Sentry.ts`
+  - Configure via environment variables:
+    - `SENTRY_DSN`: your Sentry DSN (leave empty to disable)
+  - Docs: [Sentry JavaScript/Node SDK](https://docs.sentry.io/platforms/javascript/guides/node/)
 
 ## 📖 Additional Resources
 

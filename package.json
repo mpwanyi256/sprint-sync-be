@@ -33,6 +33,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@sentry/node": "^10.8.0",
     "@commitlint/cli": "^19.8.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
@@ -61,7 +62,6 @@
   },
   "devDependencies": {
     "@commitlint/config-conventional": "^19.8.1",
-    "@sentry/node": "^10.8.0",
     "@sentry/tracing": "^7.120.4",
     "@types/jest": "^29.5.11",
     "@types/semver": "^7.7.0",
