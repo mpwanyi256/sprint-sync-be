@@ -33,7 +33,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@sentry/node": "^10.10.0",
+    "@sentry/node": "^10.11.0",
     "@commitlint/cli": "^19.8.1",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
