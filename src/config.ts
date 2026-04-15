@@ -25,19 +25,33 @@ export const parameterLimit = process.env.PARAMETER_LIMIT
   : 50000;
 
 // Database
-const dbName = process.env.DB_NAME!;
-const dbHost = process.env.DB_HOST || 'localhost';
+const dbName = process.env.DB_NAME || 'sprint-sync';
+const explicitDbUri =
+  process.env.DB_URI ||
+  process.env.MONGODB_URI ||
+  process.env.MONGO_URL ||
+  process.env.DATABASE_URL;
+const dbHost = process.env.DB_HOST;
 const dbPort = process.env.DB_PORT || '27017';
 const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASSWORD;
 const dbAuthSource = process.env.DB_AUTH_SOURCE;
 export const dbMinPoolSize = process.env.DB_MIN_POOL_SIZE!;
 export const dbMaxPoolSize = process.env.DB_MAX_POOL_SIZE!;
+const prodUser = process.env.DB_USER_PROD!;
+const prodPassword = process.env.DB_PASSWORD_PROD!;
 
-const buildMongoUri = (databaseName: string) => {
-  if (process.env.DB_URI) return process.env.DB_URI;
+const buildMongoUri = (databaseName: string, fallbackHost = 'localhost') => {
+  if (explicitDbUri) return explicitDbUri;
+  const host = dbHost || fallbackHost;
 
-  const useCredentials = Boolean(process.env.DB_HOST && dbUser && dbPassword);
+  if (!host) {
+    throw new Error(
+      'MongoDB connection is not configured. Set DB_URI, MONGODB_URI, MONGO_URL, DATABASE_URL, or DB_HOST.'
+    );
+  }
+
+  const useCredentials = Boolean(dbUser && dbPassword);
   const credentials = useCredentials
     ? `${encodeURIComponent(dbUser!)}:${encodeURIComponent(dbPassword!)}@`
     : '';
@@ -45,12 +59,12 @@ const buildMongoUri = (databaseName: string) => {
     ? `?authSource=${encodeURIComponent(dbAuthSource || databaseName)}`
     : '';
 
-  return `mongodb://${credentials}${dbHost}:${dbPort}/${databaseName}${authSource}`;
+  return `mongodb://${credentials}${host}:${dbPort}/${databaseName}${authSource}`;
 };
 
 export const dbUri = {
-  development: buildMongoUri(dbName),
-  production: buildMongoUri(dbName),
-  test: process.env.DB_URI || buildMongoUri('test'),
+  development: explicitDbUri || buildMongoUri(dbName, 'localhost'),
+  production: `mongodb+srv://${encodeURIComponent(prodUser!)}:${encodeURIComponent(prodPassword!)}@sprint-sync.vxahh0d.mongodb.net/sprint-sync?retryWrites=true&w=majority`,
+  test: explicitDbUri || process.env.DB_URI || 'mongodb://localhost:27017/test',
 };
 export const sentryDsn = process.env.SENTRY_DSN!;

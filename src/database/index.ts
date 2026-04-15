@@ -18,6 +18,9 @@ const options = {
   socketTimeoutMS: 45000,
 };
 
+const sanitizeMongoUri = (uri: string) =>
+  uri.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+
 let isConnected = false;
 
 function setRunValidators() {
@@ -44,9 +47,9 @@ export async function connectToDatabase(): Promise<void> {
     }
 
     Logger.debug(
-      `Database config - URI: ${db.uri}, MinPool: ${db.minPoolSize}, MaxPool: ${db.maxPoolSize}`
+      `Database config - URI: ${sanitizeMongoUri(db.uri)}, MinPool: ${db.minPoolSize}, MaxPool: ${db.maxPoolSize}`
     );
-    Logger.debug(`Connecting to MongoDB via ${db.uri}`);
+    Logger.debug(`Connecting to MongoDB via ${sanitizeMongoUri(db.uri)}`);
 
     const connectionPromise = mongoose.connect(db.uri, options);
 
@@ -96,7 +99,7 @@ export async function connectToDatabase(): Promise<void> {
     if (error instanceof Error) {
       if (error.message.includes('ECONNREFUSED')) {
         Logger.error(
-          'Connection refused. Make sure MongoDB is running on localhost:27017'
+          'Connection refused. Verify your MongoDB connection string points to a reachable external database in this environment.'
         );
       } else if (error.message.includes('ENOTFOUND')) {
         Logger.error(
