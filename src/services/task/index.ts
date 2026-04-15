@@ -26,9 +26,9 @@ export class TaskService {
       throw new BadRequestError('Task description is required');
     }
 
-    if (!taskData.totalMinutes || taskData.totalMinutes < 1) {
-      throw new BadRequestError('Task duration must be at least 1 minute');
-    }
+    // if (!taskData.totalMinutes || taskData.totalMinutes < 1) {
+    //   throw new BadRequestError('Task duration must be at least 1 minute');
+    // }
 
     if (taskData.totalMinutes > 10080) {
       // Max 1 week

@@ -23,13 +23,13 @@ const taskSchema = new Schema<ITask>(
       type: String,
       required: true,
       trim: true,
-      maxlength: 200,
+      // maxlength: 200,
     },
     description: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 2000,
+      // maxlength: 2000,
     },
     createdBy: {
       type: Schema.Types.ObjectId,
