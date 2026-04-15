@@ -23,7 +23,7 @@ router.post(
       description,
       totalMinutes,
       createdBy: userId,
-      status: status || 'BACKLOG',
+      status: status ? status : 'BACKLOG',
     });
 
     if (!task._id) {
