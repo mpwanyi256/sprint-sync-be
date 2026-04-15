@@ -36,6 +36,10 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/keys ./keys
 
+# Copy keys to root for production - use example files as fallback
+COPY --from=builder /app/keys/private.pem ./private.pem
+COPY --from=builder /app/keys/public.pem ./public.pem
+
 RUN mkdir -p /app/logs && chown -R nodeuser:nodejs /app
 
 USER nodeuser
