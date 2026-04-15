@@ -54,7 +54,7 @@ router.get(
   '/:id',
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Users']
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const user = await userService.getUserById(id);
 
     const formattedUser = {

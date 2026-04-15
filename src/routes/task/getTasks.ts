@@ -93,7 +93,7 @@ router.get(
   '/:id',
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const task = await taskService.getTaskById(id);
 
     const formattedTask = {

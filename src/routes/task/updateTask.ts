@@ -15,7 +15,7 @@ router.patch(
   validator(schema.updateTask, ValidationSource.BODY),
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { title, description, totalMinutes, status } = req.body;
     const userId = req.user._id.toString();
 

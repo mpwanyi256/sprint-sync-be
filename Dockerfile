@@ -1,41 +1,48 @@
-# Use Node.js LTS version
-FROM node:20-alpine
+FROM node:20-bookworm-slim AS builder
 
-# Install curl for health checks
-RUN apk add --no-cache curl
-
-# Set working directory
 WORKDIR /app
 
-# Copy package files
+ENV HUSKY=0
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json yarn.lock ./
 
-# Install dependencies
-RUN yarn install --frozen-lockfile --production=false
+RUN corepack enable && yarn install --frozen-lockfile
 
-# Copy source code
 COPY . .
 
-# Build the application (including swagger docs)
-RUN yarn build:prod
+RUN yarn build:prod \
+  && yarn install --frozen-lockfile --production=true \
+  && yarn cache clean
 
-# Remove development dependencies
-RUN yarn install --frozen-lockfile --production=true && yarn cache clean
+FROM node:20-bookworm-slim AS runner
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nodeuser -u 1001
+WORKDIR /app
 
-# Change ownership of the app directory
-RUN chown -R nodeuser:nodejs /app
+ENV NODE_ENV=production
+ENV PORT=3000
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/* \
+  && groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs --create-home nodeuser
+
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/build ./build
+COPY --from=builder /app/keys ./keys
+
+RUN mkdir -p /app/logs && chown -R nodeuser:nodejs /app
+
 USER nodeuser
 
-# Expose port (configurable via environment)
-EXPOSE ${PORT:-3000}
+EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:${PORT:-3000}/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:${PORT}/api/health || exit 1
 
-# Start the application
-CMD ["yarn", "start"]
+CMD ["node", "-r", "module-alias/register", "-r", "dotenv/config", "build/server.js"]

@@ -27,4 +27,9 @@ router.use('/users', userRoutes);
 router.use('/timelogs', timeLogRoutes);
 router.use('/admin', adminRoutes);
 
+// Sentry test route
+router.get('/debug-sentry', function mainHandler() {
+  throw new Error('My first Sentry error!');
+});
+
 export default router;

@@ -19,7 +19,7 @@ export const updateUserRole = [
     // #swagger.summary = 'Update user admin status (Admin only)'
     // #swagger.description = 'Assign or remove admin privileges from a user. Admins can promote/demote other users.'
 
-    const { userId } = req.params;
+    const { userId } = req.params as { userId: string };
     const { isAdmin } = req.body;
 
     Logger.info(

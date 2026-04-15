@@ -23,6 +23,7 @@ router.get(
         total:
           Math.round((process.memoryUsage().heapTotal / 1024 / 1024) * 100) /
           100,
+        dbConnectionStatus: true, // Placeholder - replace with actual DB connection check
       },
     };
 

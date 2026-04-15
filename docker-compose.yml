@@ -18,10 +18,12 @@ services:
       - JWT_AUDIENCE=sprint-sync-users
       - JWT_ACCESS_TOKEN_VALIDITY=3600
       - JWT_REFRESH_TOKEN_VALIDITY=86400
-      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
-      - OPENAI_KEY=${OPENAI_KEY:-}
-      - CORS_URL=http://localhost:3001
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - OPENAI_KEY_FILE=/run/secrets/openai_key
+      - APP_API_KEY_FILE=/run/secrets/app_api_key
+      - CORS_URL=*
       - LOG_DIR=logs
+      - SENTRY_DSN_FILE=/run/secrets/sentry_dns
     depends_on:
       - mongodb
     networks:
@@ -53,7 +55,7 @@ services:
       - "8081:8081"
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=sprintsync
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=sprintsync123
+      - ME_CONFIG_MONGODB_ADMINPASSWORD_FILE=/run/secrets/db_password
       - ME_CONFIG_MONGODB_URL=mongodb://sprintsync:sprintsync123@mongodb:27017/
       - ME_CONFIG_BASICAUTH_USERNAME=admin
       - ME_CONFIG_BASICAUTH_PASSWORD=pass
@@ -70,3 +72,14 @@ volumes:
 networks:
   sprint-sync-network:
     driver: bridge
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  openai_key:
+    file: ./secrets/openai_key.txt
+  app_api_key:
+    file: ./secrets/app_api_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  sentry_dns:
+    file: ./secrets/sentry_dns.txt

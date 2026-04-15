@@ -38,3 +38,6 @@ temp
 *.save.*
 
 context
+
+# Secrets
+secrets/*

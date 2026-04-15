@@ -15,7 +15,7 @@ router.post(
   validator(schema.assignTask, ValidationSource.BODY),
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const { assignedTo } = req.body;
     const assignedBy = req.user._id.toString();
 
@@ -51,7 +51,7 @@ router.delete(
   '/:id/assign',
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
-    const { id } = req.params;
+    const { id } = req.params as { id: string };
     const userId = req.user._id.toString();
 
     // check if user is an admin

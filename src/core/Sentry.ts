@@ -9,4 +9,5 @@ Sentry.init({
   ],
   // Enable logs to be sent to Sentry
   enableLogs: !isDev,
+  sendDefaultPii: true, // Send personally identifiable information (PII) to Sentry
 });

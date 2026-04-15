@@ -106,3 +106,5 @@ docs/
 
 # Swagger generated files
 swagger-output.json
+
+secrets

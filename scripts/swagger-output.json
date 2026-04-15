@@ -53,6 +53,16 @@
     "application/json"
   ],
   "paths": {
+    "/debug-sentry": {
+      "get": {
+        "description": "",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        }
+      }
+    },
     "/health/": {
       "get": {
         "tags": [

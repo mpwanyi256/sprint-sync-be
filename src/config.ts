@@ -26,15 +26,31 @@ export const parameterLimit = process.env.PARAMETER_LIMIT
 
 // Database
 const dbName = process.env.DB_NAME!;
-const dbUser = process.env.DB_USER!;
-const dbPassword = process.env.DB_PASSWORD!;
+const dbHost = process.env.DB_HOST || 'localhost';
+const dbPort = process.env.DB_PORT || '27017';
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbAuthSource = process.env.DB_AUTH_SOURCE;
 export const dbMinPoolSize = process.env.DB_MIN_POOL_SIZE!;
 export const dbMaxPoolSize = process.env.DB_MAX_POOL_SIZE!;
 
-export const dbUri = {
-  development: `mongodb://localhost:27017/${dbName}`,
-  production: `mongodb+srv://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@sprintsync.q5lzcgb.mongodb.net/${dbName}?retryWrites=true&w=majority`,
-  test: `mongodb://localhost:27017/test`,
+const buildMongoUri = (databaseName: string) => {
+  if (process.env.DB_URI) return process.env.DB_URI;
+
+  const useCredentials = Boolean(process.env.DB_HOST && dbUser && dbPassword);
+  const credentials = useCredentials
+    ? `${encodeURIComponent(dbUser!)}:${encodeURIComponent(dbPassword!)}@`
+    : '';
+  const authSource = useCredentials
+    ? `?authSource=${encodeURIComponent(dbAuthSource || databaseName)}`
+    : '';
+
+  return `mongodb://${credentials}${dbHost}:${dbPort}/${databaseName}${authSource}`;
 };
 
+export const dbUri = {
+  development: buildMongoUri(dbName),
+  production: buildMongoUri(dbName),
+  test: process.env.DB_URI || buildMongoUri('test'),
+};
 export const sentryDsn = process.env.SENTRY_DSN!;
