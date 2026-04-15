@@ -15,7 +15,7 @@ router.post(
   validator(schema.createTask),
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
-    const { title, description, totalMinutes } = req.body;
+    const { title, description, totalMinutes, status } = req.body;
     const userId = req.user._id.toString();
 
     const task = await taskService.createTask({
@@ -23,6 +23,7 @@ router.post(
       description,
       totalMinutes,
       createdBy: userId,
+      status: status || 'BACKLOG',
     });
 
     if (!task._id) {

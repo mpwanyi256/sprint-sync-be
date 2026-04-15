@@ -237,6 +237,9 @@
                 },
                 "totalMinutes": {
                   "example": "any"
+                },
+                "status": {
+                  "example": "any"
                 }
               }
             }

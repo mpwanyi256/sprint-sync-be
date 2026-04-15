@@ -5,6 +5,7 @@ export default {
     title: Joi.string().required(),
     description: Joi.string().required(),
     totalMinutes: Joi.number().required(),
+    status: Joi.string().optional(),
   }),
   getTasks: Joi.object().keys({
     page: Joi.number().required(),

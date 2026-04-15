@@ -3,6 +3,7 @@ version: '3.8'
 services:
   app:
     build: .
+    # image: samuelmpwanyi/sprint-sync:v1.0
     container_name: sprint-sync-api
     ports:
       - "3000:3000"

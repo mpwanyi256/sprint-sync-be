@@ -1,6 +1,6 @@
 import { Schema, model, Types } from 'mongoose';
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'BACKLOG';
 
 export interface ITask {
   _id?: Types.ObjectId;
@@ -44,7 +44,7 @@ const taskSchema = new Schema<ITask>(
     status: {
       type: String,
       required: true,
-      enum: ['TODO', 'IN_PROGRESS', 'DONE'],
+      enum: ['BACKLOG', 'TODO', 'IN_PROGRESS', 'DONE'],
       default: 'TODO',
     },
     createdAt: {

@@ -1,6 +1,6 @@
 import { ITask } from '../../models/Task';
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE';
+export type TaskStatus = 'BACKLOG' | 'TODO' | 'IN_PROGRESS' | 'DONE';
 
 export interface ITaskWithTimeSpent extends ITask {
   totalTimeSpent: number;
