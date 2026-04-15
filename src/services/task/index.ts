@@ -85,10 +85,12 @@ export class TaskService {
     // Validate filters
     if (
       filters.status &&
-      !['TODO', 'IN_PROGRESS', 'DONE', 'BACKLOG'].includes(filters.status)
+      !['TODO', 'IN_PROGRESS', 'DONE', 'BACKLOG', 'IN_REVIEW'].includes(
+        filters.status
+      )
     ) {
       throw new BadRequestError(
-        'Invalid status filter. Must be one of: TODO, IN_PROGRESS, DONE, BACKLOG'
+        'Invalid status filter. Must be one of: TODO, IN_PROGRESS, DONE, BACKLOG, IN_REVIEW'
       );
     }
 
