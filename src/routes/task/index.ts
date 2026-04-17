@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import authentication from '../../middleware/authentication';
-import getTasks from './getTasks';
-import createTask from './createTask';
-import updateTask from './updateTask';
-import deleteTask from './deleteTask';
 import assignTask from './assignTask';
+import createTask from './createTask';
+import deleteTask from './deleteTask';
+import getTaskDetails from './getTaskDetails';
+import getTasks from './getTasks';
+import updateTask from './updateTask';
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use('/', createTask);
 router.use('/', updateTask);
 router.use('/', deleteTask);
 router.use('/', assignTask);
+router.use('/', getTaskDetails);
 
 export default router;

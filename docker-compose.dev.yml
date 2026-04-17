@@ -1,49 +1,50 @@
+version: '3.8'
+
 services:
   app:
+    # image: samuelmpwanyi/sprint-sync:v1.1
     build:
       context: .
-      dockerfile: Dockerfile
-    image: sprint-sync-be:dev
-    container_name: sprint-sync-api-dev
+      dockerfile: Dockerfile.dev
+    container_name: sprint-sync-api
     ports:
       - "3000:3000"
-    env_file:
-      - .env
     environment:
       - NODE_ENV=development
       - PORT=3000
-      - DB_HOST=mongodb
-      - DB_PORT=27017
       - DB_NAME=sprint-sync
       - DB_USER=sprintsync
       - DB_PASSWORD=sprintsync123
-      - DB_AUTH_SOURCE=sprint-sync
-      - DB_MIN_POOL_SIZE=2
-      - DB_MAX_POOL_SIZE=5
-      - APP_API_KEY=dev-api-key
+      - DB_MIN_POOL_SIZE=5
+      - DB_MAX_POOL_SIZE=10
       - JWT_ISSUER=sprint-sync
       - JWT_AUDIENCE=sprint-sync-users
       - JWT_ACCESS_TOKEN_VALIDITY=3600
       - JWT_REFRESH_TOKEN_VALIDITY=86400
-      - JWT_SECRET=dev-secret-key-change-in-production
-      - EXPRESS_LIMIT=10mb
-      - PARAMETER_LIMIT=50000
-      - OPENAI_KEY=${OPENAI_KEY:-}
-      - CORS_URL=http://localhost:3001
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
+      - OPENAI_KEY_FILE=/run/secrets/openai_key
+      - APP_API_KEY_FILE=/run/secrets/app_api_key
+      - CORS_URL=*
       - LOG_DIR=logs
-      - SENTRY_DSN=${SENTRY_DSN:-}
+      - EXPRESS_LIMIT=50mb
+      - SENTRY_DSN_FILE=/run/secrets/sentry_dns
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     networks:
       - sprint-sync-network
     volumes:
       - ./logs:/app/logs
+      - ./secrets/jwt_secret.txt:/run/secrets/jwt_secret
+      - ./secrets/openai_key.txt:/run/secrets/openai_key
+      - ./secrets/app_api_key.txt:/run/secrets/app_api_key
+      - ./secrets/sentry_dns.txt:/run/secrets/sentry_dns
+      # bind volume to allow development without rebuilding the image
+      # - .:/app
     restart: unless-stopped
 
   mongodb:
     image: mongo:7.0
-    container_name: sprint-sync-db-dev
+    container_name: sprint-sync-db
     ports:
       - "27017:27017"
     environment:
@@ -51,26 +52,44 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=sprintsync123
       - MONGO_INITDB_DATABASE=sprint-sync
     volumes:
-      - mongodb_data_dev:/data/db
+      - mongodb_data:/data/db
       - ./scripts/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     networks:
       - sprint-sync-network
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "mongosh --quiet mongodb://$$MONGO_INITDB_ROOT_USERNAME:$$MONGO_INITDB_ROOT_PASSWORD@localhost:27017/admin --eval \"quit(db.adminCommand({ ping: 1 }).ok ? 0 : 1)\"",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: sprint-sync-mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=sprintsync
+      - ME_CONFIG_MONGODB_ADMINPASSWORD_FILE=/run/secrets/db_password
+      - ME_CONFIG_MONGODB_URL=mongodb://sprintsync:sprintsync123@mongodb:27017/
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+    depends_on:
+      - mongodb
+    networks:
+      - sprint-sync-network
     restart: unless-stopped
 
 volumes:
-  mongodb_data_dev:
+  mongodb_data:
     driver: local
 
 networks:
   sprint-sync-network:
     driver: bridge
+secrets:
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
+  openai_key:
+    file: ./secrets/openai_key.txt
+  app_api_key:
+    file: ./secrets/app_api_key.txt
+  db_password:
+    file: ./secrets/db_password.txt
+  sentry_dns:
+    file: ./secrets/sentry_dns.txt

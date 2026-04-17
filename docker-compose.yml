@@ -2,7 +2,10 @@ version: '3.8'
 
 services:
   app:
-    image: samuelmpwanyi/sprint-sync:v1.1
+    # image: samuelmpwanyi/sprint-sync:v1.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: sprint-sync-api
     ports:
       - "3000:3000"
@@ -23,6 +26,7 @@ services:
       - APP_API_KEY_FILE=/run/secrets/app_api_key
       - CORS_URL=*
       - LOG_DIR=logs
+      - EXPRESS_LIMIT=50mb
       - SENTRY_DSN_FILE=/run/secrets/sentry_dns
     depends_on:
       - mongodb
@@ -30,6 +34,10 @@ services:
       - sprint-sync-network
     volumes:
       - ./logs:/app/logs
+      - ./secrets/jwt_secret.txt:/run/secrets/jwt_secret
+      - ./secrets/openai_key.txt:/run/secrets/openai_key
+      - ./secrets/app_api_key.txt:/run/secrets/app_api_key
+      - ./secrets/sentry_dns.txt:/run/secrets/sentry_dns
     restart: unless-stopped
 
   mongodb:

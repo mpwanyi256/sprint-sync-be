@@ -38,7 +38,7 @@ COPY --from=builder /app/keys ./keys
 
 # Copy keys to root for production - use example files as fallback if they exist
 RUN if [ -f /app/keys/private.pem ]; then cp /app/keys/private.pem /app/private.pem; else cp /app/keys/private.pem.example /app/private.pem 2>/dev/null || true; fi && \
-    if [ -f /app/keys/public.pem ]; then cp /app/keys/public.pem /app/public.pem; else cp /app/keys/public.pem.example /app/public.pem 2>/dev/null || true; fi
+  if [ -f /app/keys/public.pem ]; then cp /app/keys/public.pem /app/public.pem; else cp /app/keys/public.pem.example /app/public.pem 2>/dev/null || true; fi
 
 RUN mkdir -p /app/logs && chown -R nodeuser:nodejs /app
 

@@ -1,10 +1,16 @@
 import mongoose from 'mongoose';
+import {
+  appApiKey,
+  dbMaxPoolSize,
+  dbMinPoolSize,
+  dbUri,
+  environment,
+} from '../config';
 import Logger from '../core/Logger';
 import { initializeDBData } from './initializeData';
-import { dbUri, environment, dbMinPoolSize, dbMaxPoolSize } from '../config';
 
 export const db = {
-  apikey: process.env.APP_API_KEY!,
+  apikey: appApiKey,
   uri: dbUri[environment as keyof typeof dbUri],
   minPoolSize: dbMinPoolSize,
   maxPoolSize: dbMaxPoolSize,
@@ -46,6 +52,7 @@ export async function connectToDatabase(): Promise<void> {
       throw new Error('Database URI is not configured');
     }
 
+    Logger.info('Attempting to connect to MongoDB in the ...', environment);
     Logger.debug(
       `Database config - URI: ${sanitizeMongoUri(db.uri)}, MinPool: ${db.minPoolSize}, MaxPool: ${db.maxPoolSize}`
     );
