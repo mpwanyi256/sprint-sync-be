@@ -1,11 +1,11 @@
-import { SuccessResponse } from '../../core/ApiResponses';
+import { Router } from 'express';
+import { NotFoundResponse, SuccessResponse } from '../../core/ApiResponses';
+import asyncHandler from '../../core/AsyncHandler';
 import validator, { ValidationSource } from '../../helpers/validator';
+import { TaskStatus } from '../../repositories/interfaces/ITaskRepository';
 import { taskService } from '../../services/task';
 import { ProtectedRequest } from '../../types/AppRequests';
 import schema from './schema';
-import asyncHandler from '../../core/AsyncHandler';
-import { Router } from 'express';
-import { TaskStatus } from '../../repositories/interfaces/ITaskRepository';
 
 const router = Router();
 
@@ -71,6 +71,7 @@ router.get(
     const formattedTasks = tasks.map(task => ({
       id: task._id,
       title: task.title,
+      status: task.status,
       description: task.description,
       totalMinutes: task.totalMinutes,
       totalTimeSpent: task.totalTimeSpent || 0,
@@ -94,18 +95,29 @@ router.get(
   asyncHandler(async (req: ProtectedRequest, res) => {
     // #swagger.tags = ['Tasks']
     const { id } = req.params as { id: string };
-    const task = await taskService.getTaskById(id);
+
+    const task = await taskService.getAllTasksWithPagination(
+      { id },
+      { page: 1, limit: 1 }
+    );
+
+    if (!task || task.tasks.length === 0) {
+      throw new NotFoundResponse('Task not found.');
+    }
+
+    const returnedTask = task.tasks[0];
 
     const formattedTask = {
-      id: task._id,
-      title: task.title,
-      description: task.description,
-      totalMinutes: task.totalMinutes,
-      totalTimeSpent: task.totalTimeSpent || 0,
-      createdBy: task.createdBy,
-      assignee: task.assignee,
-      createdAt: task.createdAt,
-      updatedAt: task.updatedAt,
+      id: returnedTask._id?.toString(),
+      title: returnedTask.title,
+      status: returnedTask.status,
+      description: returnedTask.description,
+      totalMinutes: returnedTask.totalMinutes,
+      totalTimeSpent: returnedTask.totalTimeSpent || 0,
+      createdBy: returnedTask.createdBy,
+      assignedTo: returnedTask.assignee,
+      createdAt: returnedTask.createdAt,
+      updatedAt: returnedTask.updatedAt,
     };
 
     new SuccessResponse('Task retrieved successfully', {

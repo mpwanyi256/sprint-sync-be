@@ -1,16 +1,15 @@
-import { TaskModel } from '../models/Task';
-import { ITask } from '../models/Task';
-import { TaskAssignmentModel } from '../models/TaskAssignment';
 import { DatabaseError } from '../core/ApiErrors';
-import {
-  ITaskRepository,
-  CreateTaskDto,
-  UpdateTaskDto,
-  TaskFilters,
-  PaginationOptions,
-  PaginatedTasksResult,
-} from './interfaces/ITaskRepository';
 import Logger from '../core/Logger';
+import { ITask, TaskModel } from '../models/Task';
+import { TaskAssignmentModel } from '../models/TaskAssignment';
+import {
+  CreateTaskDto,
+  ITaskRepository,
+  PaginatedTasksResult,
+  PaginationOptions,
+  TaskFilters,
+  UpdateTaskDto,
+} from './interfaces/ITaskRepository';
 
 export class TaskRepository implements ITaskRepository {
   async create(taskData: CreateTaskDto): Promise<ITask> {
@@ -160,6 +159,11 @@ export class TaskRepository implements ITaskRepository {
       // Implement status filter
       if (filters.status) {
         filterQuery.status = filters.status;
+      }
+
+      // Add id filter if provided
+      if (filters.id) {
+        filterQuery._id = filters.id;
       }
 
       if (filters.assignee) {

@@ -27,6 +27,7 @@ export interface TaskFilters {
   createdBy?: string;
   title?: string;
   description?: string;
+  id?: string;
 }
 
 export interface PaginationOptions {

@@ -3,7 +3,6 @@ import authentication from '../../middleware/authentication';
 import assignTask from './assignTask';
 import createTask from './createTask';
 import deleteTask from './deleteTask';
-import getTaskDetails from './getTaskDetails';
 import getTasks from './getTasks';
 import updateTask from './updateTask';
 
@@ -17,6 +16,5 @@ router.use('/', createTask);
 router.use('/', updateTask);
 router.use('/', deleteTask);
 router.use('/', assignTask);
-router.use('/', getTaskDetails);
 
 export default router;
