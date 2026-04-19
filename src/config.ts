@@ -5,7 +5,7 @@ export const port = process.env.PORT!;
 export const corsUrl = process.env.CORS_URL!;
 export const environment = process.env.NODE_ENV!;
 
-export const isDev = environment === 'development';
+export const isDev = environment !== 'production';
 
 export const logDirectory = process.env.LOG_DIR!;
 
@@ -45,10 +45,18 @@ const prodUser = process.env.DB_USER_PROD!;
 const prodPassword = process.env.DB_PASSWORD_PROD!;
 const dbUser = process.env.DB_USER!;
 const dbPassword = process.env.DB_PASSWORD!;
-
+const dbHost = process.env.DB_HOST!;
+const dbName = process.env.DB_NAME!;
+const dbUrl = process.env.DB_URL!;
 export const dbUri = {
-  development: `mongodb://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@mongodb:27017`,
-  production: `mongodb+srv://${encodeURIComponent(prodUser!)}:${encodeURIComponent(prodPassword!)}@sprint-sync.vxahh0d.mongodb.net/sprint-sync?retryWrites=true&w=majority`,
+  development: isDev
+    ? `mongodb://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@${dbHost}:27017/${dbName}`
+    : process.env.DB_URL
+      ? process.env.DB_URL
+      : `mongodb://${encodeURIComponent(dbUser)}:${encodeURIComponent(dbPassword)}@${dbHost}:27017/${dbName}`,
+  production: dbUrl
+    ? dbUrl
+    : `mongodb+srv://${encodeURIComponent(prodUser!)}:${encodeURIComponent(prodPassword!)}@sprint-sync.vxahh0d.mongodb.net/${dbName}?retryWrites=true&w=majority`,
   test: 'mongodb://localhost:27017/test',
 };
 
