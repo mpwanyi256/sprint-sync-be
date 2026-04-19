@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { JoiObjectId } from '../../helpers/validator';
 
 export default {
   createTask: Joi.object().keys({
@@ -27,5 +28,17 @@ export default {
   }),
   searchTasks: Joi.object().keys({
     keyword: Joi.string().required(),
+  }),
+  createComment: Joi.object().keys({
+    message: Joi.string().required().min(1).max(5000),
+  }),
+  updateComment: Joi.object().keys({
+    message: Joi.string().required().min(1).max(5000),
+  }),
+  commentParams: Joi.object().keys({
+    taskId: JoiObjectId().required(),
+  }),
+  commentIdParams: Joi.object().keys({
+    commentId: JoiObjectId().required(),
   }),
 };

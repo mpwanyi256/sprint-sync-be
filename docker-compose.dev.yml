@@ -6,10 +6,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: sprint-sync-api
+    container_name: sprint-sync-api-dev
     ports:
       - "3000:3000"
     environment:
+      - DB_HOST=mongodb
       - NODE_ENV=development
       - PORT=3000
       - DB_NAME=sprint-sync
@@ -38,8 +39,12 @@ services:
       - ./secrets/openai_key.txt:/run/secrets/openai_key
       - ./secrets/app_api_key.txt:/run/secrets/app_api_key
       - ./secrets/sentry_dns.txt:/run/secrets/sentry_dns
-      # bind volume to allow development without rebuilding the image
-      # - .:/app
+      - ./keys:/app/keys:ro
+      - ./.env:/app/.env:ro
+      # bind mount the source code, but preserve container-installed dependencies
+      - ./:/app:delegated
+      - /app/node_modules
+    command: ["yarn", "dev:watch"]
     restart: unless-stopped
 
   mongodb:
